@@ -1,0 +1,18 @@
+{
+  "name": "Purchases",
+  "short_name": "Purchases",
+  "description": "Простое PWA для учёта покупок",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f5f7fa",
+  "theme_color": "#4a90e2",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
