@@ -42,4 +42,7 @@ describe('ios: без системных диалогов', () => {
     assert.ok(html.includes('id="appVerHead"'), 'нет appVerHead в шапке');
     assert.ok(appSrc.includes("el('appVerHead')"), 'версия не подставляется');
   });
+  it('конфликт записи повторяется (409/422)', () => {
+    assert.ok(/github-put \(409\|422\)/.test(syncSrc), 'нет ретрая 409/422');
+  });
 });

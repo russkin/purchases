@@ -49,6 +49,14 @@
     var repo = state.settings.repo;
     var token = state.settings.token;
     if (!token) return Promise.resolve({ status: 'no-token', state: state });
+    return attempt(state, repo, token, 3).catch(function (e) {
+      return { status: 'error', state: state, error: String(e && e.message || e) };
+    });
+  }
+
+  /* Одна попытка: прочитать → решить → применить.
+   * При 409/422 (кто-то запушил между GET и PUT) перечитать и решить заново. */
+  function attempt(state, repo, token, triesLeft) {
     return getRemote(repo, token).then(function (remote) {
       if (!remote) {
         if (window.QLLogic.isCatalogEmpty(state.catalog)) {
@@ -65,11 +73,16 @@
       }
       if (decision === 'push') {
         return putRemote(repo, token, { updatedAt: state.updatedAt, catalog: state.catalog }, remote.sha)
-          .then(function () { return { status: 'pushed', state: state }; });
+          .then(function () { return { status: 'pushed', state: state }; })
+          .catch(function (e) {
+            var msg = String(e && e.message || e);
+            if (triesLeft > 0 && /github-put (409|422)/.test(msg)) {
+              return attempt(state, repo, token, triesLeft - 1);
+            }
+            throw e;
+          });
       }
       return { status: 'in-sync', state: state, sha: remote.sha };
-    }).catch(function (e) {
-      return { status: 'error', state: state, error: String(e && e.message || e) };
     });
   }
 
