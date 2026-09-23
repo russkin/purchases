@@ -3,7 +3,7 @@
 
 (function () {
   var LONGPRESS_MS = 3000;
-  var APP_VERSION = 'v7';
+  var APP_VERSION = 'v8';
   var L = window.QLLogic;
   var state = null;
   var selectedCat = null;
@@ -150,7 +150,7 @@
       if (!c.name) {
         askText('Название категории:').then(function (name) {
           if (name === null) return;
-          L.setCategoryName(state, ci, name);
+          L.setCategoryName(state.catalog, ci, name);
           save(); render();
         });
       } else {
@@ -161,7 +161,7 @@
     longPress(b, function () {
       askText('Название категории (пусто — убрать):', c.name).then(function (name) {
         if (name === null) return;
-        L.setCategoryName(state, ci, name);
+        L.setCategoryName(state.catalog, ci, name);
         save(); render();
       });
     });
@@ -188,7 +188,7 @@
       minus.setAttribute('aria-label', 'Уменьшить');
       minus.addEventListener('click', function (e) {
         e.stopPropagation();
-        var q = L.decProduct(state, ci, pi);
+        var q = L.decProduct(state.catalog, ci, pi);
         lastAction = p.name + ': ×' + q;
         save(); render();
       });
@@ -199,11 +199,11 @@
       if (!p.name) {
         askText('Название товара:').then(function (name) {
           if (name === null) return;
-          L.setProductName(state, ci, pi, name);
+          L.setProductName(state.catalog, ci, pi, name);
           save(); render();
         });
       } else {
-        var q = L.incProduct(state, ci, pi);
+        var q = L.incProduct(state.catalog, ci, pi);
         lastAction = p.name + ': ×' + q;
         save(); render();
       }
@@ -211,7 +211,7 @@
     longPress(b, function () {
       askText('Название товара (пусто — убрать):', p.name).then(function (name) {
         if (name === null) return;
-        L.setProductName(state, ci, pi, name);
+        L.setProductName(state.catalog, ci, pi, name);
         save(); render();
       });
     });
@@ -268,7 +268,7 @@
         cb.type = 'checkbox';
         cb.checked = it.product.checked;
         cb.addEventListener('change', function () {
-          L.setChecked(state, it.catIndex, it.prodIndex, cb.checked, Date.now());
+          L.setChecked(state.catalog, it.catIndex, it.prodIndex, cb.checked, Date.now());
           save(); render();
         });
         var nm = document.createElement('span');
@@ -281,7 +281,7 @@
         row.appendChild(nm);
         row.appendChild(qty);
         longPress(row, function () {
-          L.removeFromList(state, it.catIndex, it.prodIndex);
+          L.removeFromList(state.catalog, it.catIndex, it.prodIndex);
           save(); render();
         });
         h.appendChild(row);

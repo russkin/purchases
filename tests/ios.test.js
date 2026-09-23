@@ -30,4 +30,11 @@ describe('ios: без системных диалогов', () => {
     assert.ok(appSrc.includes('diagBtn'), 'нет diagBtn');
     assert.ok(syncSrc.includes('normalizeCatalog'), 'нет normalizeCatalog в sync');
   });
+  it('мутации логики получают state.catalog, а не state', () => {
+    const fns = ['setCategoryName', 'setProductName', 'incProduct', 'decProduct', 'setChecked', 'removeFromList'];
+    for (const fn of fns) {
+      assert.ok(!new RegExp('L\\.' + fn + '\\(state[^.]').test(appSrc), 'найден вызов ' + fn + '(state, …)');
+      assert.ok(appSrc.includes('L.' + fn + '(state.catalog,'), 'нет вызова ' + fn + '(state.catalog, …)');
+    }
+  });
 });
