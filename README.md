@@ -13,7 +13,7 @@
 - `src/logic.js` — чистая логика без DOM (общая для браузера и тестов)
 - `sw.js` — service worker (cache-first shell → открытие ≤ 2 сек офлайн)
 - `manifest.webmanifest`, `icon.svg` — установка как приложение
-- `tests/` — unit-тесты (`node --test tests/logic.test.js tests/ios.test.js tests/sync.test.js`), покрытие logic.js/sync.js ~99% строк
+- `tests/` — unit-тесты (`node --test tests/logic.test.js tests/ios.test.js tests/sync.test.js tests/sync-devices.test.js`), покрытие logic.js/sync.js ~99% строк
 - `docs/USER_GUIDE.md` — инструкция пользователя
 
 ## Разработка
