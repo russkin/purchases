@@ -3,7 +3,7 @@
 
 (function () {
   var LONGPRESS_MS = 3000;
-  var APP_VERSION = 'v19';
+  var APP_VERSION = 'v20';
   var L = window.QLLogic;
   var state = null;
   var selectedCat = null;
@@ -220,7 +220,7 @@
     if (p.name) {
       var qty = document.createElement('div');
       qty.className = 'qty';
-      qty.textContent = String(p.qty);
+      qty.textContent = p.qty > 0 ? String(p.qty) : '';
       b.appendChild(qty);
       var minus = document.createElement('button');
       minus.className = 'minus';

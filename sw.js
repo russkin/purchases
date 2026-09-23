@@ -1,4 +1,4 @@
-const CACHE = 'quicklist-v19';
+const CACHE = 'quicklist-v20';
 const ASSETS = [
   './',
   './index.html',
@@ -12,7 +12,12 @@ const ASSETS = [
 ];
 
 self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(ASSETS)).then(() => self.skipWaiting()));
+  /* Файлы брать строго из сети (cache: 'reload'): GitHub Pages отдаёт
+   * Cache-Control: max-age=600, и обычный addAll может положить в кэш
+   * HTTP-устаревшие файлы прошлого релиза — тогда доработки видны,
+   * а метка версии (она в app.js) остаётся старой. */
+  var fresh = ASSETS.map(function (u) { return new Request(u, { cache: 'reload' }); });
+  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(fresh)).then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', (e) => {
