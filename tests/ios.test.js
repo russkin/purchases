@@ -42,6 +42,11 @@ describe('ios: без системных диалогов', () => {
     assert.ok(html.includes('id="appVerHead"'), 'нет appVerHead в шапке');
     assert.ok(appSrc.includes("el('appVerHead')"), 'версия не подставляется');
   });
+  it('очистка кэша с гарантированной перезагрузкой и автообновлением', () => {
+    assert.ok(appSrc.includes('clearCacheNow'), 'нет clearCacheNow');
+    assert.ok(appSrc.includes('setTimeout(done, 4000)'), 'нет страховки перезагрузки');
+    assert.ok(appSrc.includes('controllerchange'), 'нет автообновления');
+  });
   it('конфликт записи повторяется (409/422)', () => {
     assert.ok(/github-put \(409\|422\)/.test(syncSrc), 'нет ретрая 409/422');
   });

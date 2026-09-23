@@ -3,7 +3,7 @@
 
 (function () {
   var LONGPRESS_MS = 3000;
-  var APP_VERSION = 'v12';
+  var APP_VERSION = 'v13';
   var L = window.QLLogic;
   var state = null;
   var selectedCat = null;
@@ -136,6 +136,45 @@
       state = res.state;
       return window.QLStore.save(state);
     }).then(render);
+  }
+
+  /* Очистка кэша с видимым прогрессом и гарантированной перезагрузкой:
+   * даже если какой-то шаг зависнет, страница перезагрузится по таймеру. */
+  function clearCacheNow() {
+    var reloaded = false;
+    function done() {
+      if (reloaded) return;
+      reloaded = true;
+      window.location.reload();
+    }
+    setTimeout(done, 4000);
+    try {
+      syncStatus = 'чищу кэш…';
+      renderStatus();
+      var p = Promise.resolve();
+      if ('caches' in window) {
+        p = p.then(function () { return window.caches.keys(); }).then(function (keys) {
+          syncStatus = 'кэш: ' + keys.length + ' зап., удаляю…';
+          renderStatus();
+          return Promise.all(keys.map(function (k) { return window.caches.delete(k); }));
+        });
+      }
+      if ('serviceWorker' in navigator && navigator.serviceWorker.getRegistrations) {
+        p = p.then(function () { return navigator.serviceWorker.getRegistrations(); })
+          .then(function (regs) {
+            syncStatus = 'воркеров: ' + regs.length + '…';
+            renderStatus();
+            return Promise.all(regs.map(function (r) { return r.unregister(); }));
+          });
+      }
+      p.then(function () {
+        syncStatus = 'перезагрузка…';
+        renderStatus();
+        setTimeout(done, 400);
+      }).catch(done);
+    } catch (e) {
+      done();
+    }
   }
 
   /* --- Режим добавления --- */
@@ -348,19 +387,7 @@
     el('clearCache').addEventListener('click', function () {
       askConfirm('Очистить кэш приложения? Списки и названия сохранятся, страница перезагрузится.').then(function (ok) {
         if (!ok) return;
-        syncStatus = 'чищу кэш…';
-        renderStatus();
-        var done = function () { window.location.reload(); };
-        if (!('caches' in window)) { done(); return; }
-        window.caches.keys().then(function (keys) {
-          return Promise.all(keys.map(function (k) { return window.caches.delete(k); }));
-        }).then(function () {
-          if ('serviceWorker' in navigator) {
-            return navigator.serviceWorker.getRegistrations().then(function (regs) {
-              return Promise.all(regs.map(function (r) { return r.unregister(); }));
-            });
-          }
-        }).then(done).catch(done);
+        clearCacheNow();
       });
     });
     el('syncBtn').addEventListener('click', doSync);
@@ -390,12 +417,28 @@
       render();
       return window.QLStore.save(state);
     }).then(function () {
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('./sw.js').catch(function () {});
-      }
+      setupAutoUpdate();
       /* Автоподтягивание общего списка при открытии (кнопка ⇅ больше не обязательна). */
       if (state.settings.token && navigator.onLine) doSync();
     });
+  }
+
+  /* Автообновление: если при открытии найден новый service worker,
+   * он активируется сам (skipWaiting) — перезагружаем страницу один раз,
+   * чтобы новая версия применилась без кнопки «Очистить кэш». */
+  var updateReloaded = false;
+  function setupAutoUpdate() {
+    try {
+      if (!('serviceWorker' in navigator)) return;
+      navigator.serviceWorker.register('./sw.js').then(function (reg) {
+        try { if (reg && reg.update) reg.update(); } catch (e) {}
+      }).catch(function () {});
+      navigator.serviceWorker.addEventListener('controllerchange', function () {
+        if (updateReloaded) return;
+        updateReloaded = true;
+        window.location.reload();
+      });
+    } catch (e) {}
   }
 
   document.addEventListener('DOMContentLoaded', init);
