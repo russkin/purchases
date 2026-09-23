@@ -297,6 +297,24 @@
       state.settings.token = el('tokenInput').value.trim();
       save(); render();
     });
+    el('clearCache').addEventListener('click', function () {
+      askConfirm('Очистить кэш приложения? Списки и названия сохранятся, страница перезагрузится.').then(function (ok) {
+        if (!ok) return;
+        syncStatus = 'чищу кэш…';
+        renderStatus();
+        var done = function () { window.location.reload(); };
+        if (!('caches' in window)) { done(); return; }
+        window.caches.keys().then(function (keys) {
+          return Promise.all(keys.map(function (k) { return window.caches.delete(k); }));
+        }).then(function () {
+          if ('serviceWorker' in navigator) {
+            return navigator.serviceWorker.getRegistrations().then(function (regs) {
+              return Promise.all(regs.map(function (r) { return r.unregister(); }));
+            });
+          }
+        }).then(done).catch(done);
+      });
+    });
     el('syncBtn').addEventListener('click', doSync);
     window.addEventListener('online', render);
     window.addEventListener('offline', render);

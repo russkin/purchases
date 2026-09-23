@@ -91,7 +91,7 @@
 
   function defaultState() {
     return {
-      catalog: window.QLLogic.blankCatalog(),
+      catalog: window.QLLogic.seedCatalog(),
       settings: { mode: 'add', repo: 'russkin/purchases', token: '' },
       updatedAt: Date.now()
     };

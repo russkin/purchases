@@ -25,6 +25,41 @@ function blankCatalog() {
   return { categories: categories };
 }
 
+/* Стартовый каталог для новых установок: заполняет только имена,
+ * количества нулевые. С var SEED = [ [категория, [товары...]], ... ]. */
+var SEED = [
+  ['Молочка', ['Молоко', 'Кефир', 'Йогурт', 'Сыр', 'Масло', 'Творог', 'Сметана', 'Яйца']],
+  ['Хлеб', ['Батон', 'Чёрный хлеб', 'Лаваш', 'Булочки']],
+  ['Овощи', ['Картофель', 'Морковь', 'Лук', 'Помидоры', 'Огурцы', 'Зелень']],
+  ['Фрукты', ['Яблоки', 'Бананы', 'Апельсины', 'Лимоны']],
+  ['Мясо и рыба', ['Курица', 'Фарш', 'Рыба', 'Колбаса', 'Сосиски']],
+  ['Крупы', ['Гречка', 'Рис', 'Макароны', 'Овсянка', 'Мука', 'Сахар']],
+  ['Бытовая химия', ['Порошок', 'Мыло', 'Шампунь', 'Туалетная бумага']]
+];
+
+function seedCatalog() {
+  var catalog = blankCatalog();
+  fillEmptyNames(catalog);
+  return catalog;
+}
+
+/* Заполняет ПУСТЫЕ имена категорий/товаров из SEED.
+ * Количества, отметки и непустые имена не трогает.
+ * Возвращает число заполненных ячеек. */
+function fillEmptyNames(catalog) {
+  var filled = 0;
+  SEED.forEach(function (entry, ci) {
+    var c = catalog.categories[ci];
+    if (!c) return;
+    if (!c.name) { c.name = entry[0]; filled += 1; }
+    entry[1].forEach(function (name, pi) {
+      var p = c.products[pi];
+      if (p && !p.name) { p.name = name; filled += 1; }
+    });
+  });
+  return filled;
+}
+
 function normName(s) {
   return String(s == null ? '' : s).trim();
 }
@@ -174,6 +209,8 @@ var api = {
   blankProduct: blankProduct,
   blankCategory: blankCategory,
   blankCatalog: blankCatalog,
+  seedCatalog: seedCatalog,
+  fillEmptyNames: fillEmptyNames,
   setCategoryName: setCategoryName,
   setProductName: setProductName,
   incProduct: incProduct,

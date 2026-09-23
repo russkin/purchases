@@ -116,3 +116,29 @@ describe('очистки и полуночное удаление', () => {
     assert.equal(c.categories[0].products[1].qty, 1);
   });
 });
+
+describe('seed-каталог', () => {
+  it('seedCatalog: 7 категорий с товарами, количества нулевые', () => {
+    const c = L.seedCatalog();
+    assert.equal(c.categories[0].name, 'Молочка');
+    assert.equal(c.categories[0].products[0].name, 'Молоко');
+    assert.equal(c.categories[1].name, 'Хлеб');
+    assert.equal(c.categories[6].name, 'Бытовая химия');
+    assert.equal(c.categories[7].name, '');
+    assert.equal(c.categories[0].products[0].qty, 0);
+    assert.equal(L.activeCount(c), 0);
+  });
+  it('fillEmptyNames не трогает занятые имена и количества', () => {
+    const c = L.blankCatalog();
+    L.setCategoryName(c, 0, 'Своя');
+    L.setProductName(c, 0, 1, 'Свой товар');
+    L.incProduct(c, 1, 0);
+    const filled = L.fillEmptyNames(c);
+    assert.ok(filled > 0);
+    assert.equal(c.categories[0].name, 'Своя');
+    assert.equal(c.categories[0].products[0].name, 'Молоко');
+    assert.equal(c.categories[0].products[1].name, 'Свой товар');
+    assert.equal(c.categories[1].products[0].qty, 1);
+    assert.equal(c.categories[1].products[0].name, 'Батон');
+  });
+});
