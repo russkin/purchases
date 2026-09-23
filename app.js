@@ -3,7 +3,7 @@
 
 (function () {
   var LONGPRESS_MS = 3000;
-  var APP_VERSION = 'v17';
+  var APP_VERSION = 'v18';
   var L = window.QLLogic;
   var state = null;
   var selectedCat = null;
@@ -218,6 +218,10 @@
     label.textContent = p.name || '+';
     b.appendChild(label);
     if (p.name) {
+      var qty = document.createElement('div');
+      qty.className = 'qty';
+      qty.textContent = String(p.qty);
+      b.appendChild(qty);
       var minus = document.createElement('button');
       minus.className = 'minus';
       minus.textContent = '−';
@@ -229,10 +233,6 @@
         save(); render();
       });
       b.appendChild(minus);
-      var qty = document.createElement('div');
-      qty.className = 'qty';
-      qty.textContent = String(p.qty);
-      b.appendChild(qty);
       var plus = document.createElement('button');
       plus.className = 'plus';
       plus.textContent = '+';
