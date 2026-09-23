@@ -3,7 +3,7 @@
 
 (function () {
   var LONGPRESS_MS = 3000;
-  var APP_VERSION = 'v10';
+  var APP_VERSION = 'v11';
   var L = window.QLLogic;
   var state = null;
   var selectedCat = null;
@@ -120,9 +120,11 @@
   }
 
   var syncTimer = null;
+  /* Синк после каждого изменения (с коротким debounce, чтобы серия
+   * быстрых нажатий уходила одним запросом). */
   function scheduleSync() {
     if (syncTimer) clearTimeout(syncTimer);
-    syncTimer = setTimeout(doSync, 5000);
+    syncTimer = setTimeout(doSync, 2000);
   }
 
   function doSync() {

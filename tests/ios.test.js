@@ -45,4 +45,7 @@ describe('ios: без системных диалогов', () => {
   it('конфликт записи повторяется (409/422)', () => {
     assert.ok(/github-put \(409\|422\)/.test(syncSrc), 'нет ретрая 409/422');
   });
+  it('синк объединяет попродуктово', () => {
+    assert.ok(syncSrc.includes('mergeCatalogs'), 'нет mergeCatalogs в sync');
+  });
 });

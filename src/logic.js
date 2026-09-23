@@ -10,13 +10,13 @@ var MAX_CATEGORIES = 12;
 var MAX_PRODUCTS = 12;
 
 function blankProduct() {
-  return { name: '', qty: 0, checked: false, checkedAt: 0 };
+  return { name: '', qty: 0, checked: false, checkedAt: 0, ts: 0 };
 }
 
 function blankCategory() {
   var products = [];
   for (var i = 0; i < MAX_PRODUCTS; i++) products.push(blankProduct());
-  return { name: '', products: products };
+  return { name: '', products: products, ts: 0 };
 }
 
 function blankCatalog() {
@@ -66,30 +66,36 @@ function normName(s) {
 
 /* --- Категории / товары --- */
 
-function setCategoryName(catalog, catIndex, name) {
-  catalog.categories[catIndex].name = normName(name);
+function setCategoryName(catalog, catIndex, name, nowMs) {
+  var c = catalog.categories[catIndex];
+  c.name = normName(name);
+  c.ts = nowMs || Date.now();
   return catalog;
 }
 
-function setProductName(catalog, catIndex, prodIndex, name) {
-  catalog.categories[catIndex].products[prodIndex].name = normName(name);
+function setProductName(catalog, catIndex, prodIndex, name, nowMs) {
+  var p = catalog.categories[catIndex].products[prodIndex];
+  p.name = normName(name);
+  p.ts = nowMs || Date.now();
   return catalog;
 }
 
 /* Нажатие на большую кнопку товара: +1, снимает отметку «куплен». */
-function incProduct(catalog, catIndex, prodIndex) {
+function incProduct(catalog, catIndex, prodIndex, nowMs) {
   var p = catalog.categories[catIndex].products[prodIndex];
   p.qty += 1;
   p.checked = false;
   p.checkedAt = 0;
+  p.ts = nowMs || Date.now();
   return p.qty;
 }
 
 /* Маленькая кнопка «−»: минимум 0. */
-function decProduct(catalog, catIndex, prodIndex) {
+function decProduct(catalog, catIndex, prodIndex, nowMs) {
   var p = catalog.categories[catIndex].products[prodIndex];
   if (p.qty > 0) p.qty -= 1;
   if (p.qty === 0) { p.checked = false; p.checkedAt = 0; }
+  p.ts = nowMs || Date.now();
   return p.qty;
 }
 
@@ -98,39 +104,46 @@ function setChecked(catalog, catIndex, prodIndex, checked, nowMs) {
   var p = catalog.categories[catIndex].products[prodIndex];
   p.checked = !!checked;
   p.checkedAt = checked ? (nowMs || Date.now()) : 0;
+  p.ts = nowMs || Date.now();
   return p;
 }
 
 /* Долгое нажатие в списке: удалить товар из списка насовсем (имя в справочнике остаётся). */
-function removeFromList(catalog, catIndex, prodIndex) {
+function removeFromList(catalog, catIndex, prodIndex, nowMs) {
   var p = catalog.categories[catIndex].products[prodIndex];
   p.qty = 0;
   p.checked = false;
   p.checkedAt = 0;
+  p.ts = nowMs || Date.now();
   return catalog;
 }
 
 /* Кнопка «Очистить список»: обнулить количества и отметки, имена оставить. */
-function clearList(catalog) {
+function clearList(catalog, nowMs) {
+  var t = nowMs || Date.now();
   catalog.categories.forEach(function (c) {
     c.products.forEach(function (p) {
       p.qty = 0;
       p.checked = false;
       p.checkedAt = 0;
+      p.ts = t;
     });
   });
   return catalog;
 }
 
 /* Кнопка «Очистить все кнопки»: сброс имён категорий и товаров. */
-function clearAll(catalog) {
+function clearAll(catalog, nowMs) {
+  var t = nowMs || Date.now();
   catalog.categories.forEach(function (c) {
     c.name = '';
+    c.ts = t;
     c.products.forEach(function (p) {
       p.name = '';
       p.qty = 0;
       p.checked = false;
       p.checkedAt = 0;
+      p.ts = t;
     });
   });
   return catalog;
@@ -154,6 +167,7 @@ function purgeChecked(catalog, nowMs) {
         p.qty = 0;
         p.checked = false;
         p.checkedAt = 0;
+        p.ts = nowMs;
         removed += 1;
       }
     });
@@ -212,7 +226,9 @@ function normalizeProduct(p) {
   var checked = !!p.checked;
   var checkedAt = parseInt(p.checkedAt, 10);
   if (!(checkedAt > 0)) checkedAt = 0;
-  return { name: normName(p.name), qty: qty, checked: checked, checkedAt: checked ? checkedAt : 0 };
+  var ts = parseInt(p.ts, 10);
+  if (!(ts > 0)) ts = 0;
+  return { name: normName(p.name), qty: qty, checked: checked, checkedAt: checked ? checkedAt : 0, ts: ts };
 }
 
 function normalizeCategory(c) {
@@ -220,7 +236,9 @@ function normalizeCategory(c) {
   var src = Array.isArray(c.products) ? c.products : [];
   var products = [];
   for (var i = 0; i < MAX_PRODUCTS; i++) products.push(normalizeProduct(src[i]));
-  return { name: normName(c.name), products: products };
+  var ts = parseInt(c.ts, 10);
+  if (!(ts > 0)) ts = 0;
+  return { name: normName(c.name), products: products, ts: ts };
 }
 
 /* Приводит любой вход к форме 12×12, сохраняя имеющиеся данные. */
@@ -229,6 +247,49 @@ function normalizeCatalog(catalog) {
   var categories = [];
   for (var i = 0; i < MAX_CATEGORIES; i++) categories.push(normalizeCategory(src[i]));
   return { categories: categories };
+}
+
+/* --- Попродуктовое слияние --- */
+
+/* Для каждой ячейки (товар, название категории) побеждает запись
+ * с более свежей меткой ts; при равных метках — локальная.
+ * Устаревшие/пустые данные (ts=0) реальные правки не затирают. */
+function cloneProduct(p) {
+  return { name: p.name, qty: p.qty, checked: p.checked, checkedAt: p.checkedAt, ts: p.ts || 0 };
+}
+
+function mergeProduct(local, remote) {
+  var lt = local.ts || 0;
+  var rt = remote.ts || 0;
+  return cloneProduct(rt > lt ? remote : local);
+}
+
+function mergeCategory(local, remote) {
+  var lt = local.ts || 0;
+  var rt = remote.ts || 0;
+  var products = [];
+  for (var i = 0; i < MAX_PRODUCTS; i++) {
+    products.push(mergeProduct(local.products[i], remote.products[i]));
+  }
+  return {
+    name: rt > lt ? remote.name : local.name,
+    products: products,
+    ts: Math.max(lt, rt)
+  };
+}
+
+function mergeCatalogs(localCatalog, remoteCatalog) {
+  var a = normalizeCatalog(localCatalog);
+  var b = normalizeCatalog(remoteCatalog);
+  var categories = [];
+  for (var i = 0; i < MAX_CATEGORIES; i++) {
+    categories.push(mergeCategory(a.categories[i], b.categories[i]));
+  }
+  return { categories: categories };
+}
+
+function catalogsEqual(a, b) {
+  return JSON.stringify(normalizeCatalog(a)) === JSON.stringify(normalizeCatalog(b));
 }
 
 /* --- Решение о слиянии локального и удалённого состояний --- */
@@ -283,7 +344,11 @@ var api = {
   mergeDecision: mergeDecision,
   normalizeProduct: normalizeProduct,
   normalizeCategory: normalizeCategory,
-  normalizeCatalog: normalizeCatalog
+  normalizeCatalog: normalizeCatalog,
+  mergeProduct: mergeProduct,
+  mergeCategory: mergeCategory,
+  mergeCatalogs: mergeCatalogs,
+  catalogsEqual: catalogsEqual
 };
 
 if (typeof module !== 'undefined' && module.exports) {

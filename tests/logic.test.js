@@ -117,6 +117,61 @@ describe('очистки и полуночное удаление', () => {
   });
 });
 
+describe('mergeCatalogs: попродуктовое слияние', () => {
+  it('параллельные правки разных товаров сохраняются обе', () => {
+    const a = L.seedCatalog();
+    const b = L.seedCatalog();
+    L.incProduct(a, 0, 0, 1000);
+    L.incProduct(b, 1, 0, 1000);
+    const m = L.mergeCatalogs(a, b);
+    assert.equal(m.categories[0].products[0].qty, 1);
+    assert.equal(m.categories[1].products[0].qty, 1);
+  });
+  it('один товар: побеждает свежая метка, равные — локальные', () => {
+    const a = L.seedCatalog();
+    const b = L.seedCatalog();
+    L.incProduct(a, 0, 0, 1000);
+    L.incProduct(b, 0, 0, 2000);
+    L.incProduct(b, 0, 0, 2000);
+    assert.equal(L.mergeCatalogs(a, b).categories[0].products[0].qty, 2);
+    assert.equal(L.mergeCatalogs(b, a).categories[0].products[0].qty, 2);
+    const c = L.seedCatalog();
+    const d = L.seedCatalog();
+    L.incProduct(c, 0, 0, 1000);
+    L.setProductName(d, 0, 0, 'Своё', 1000);
+    assert.equal(L.mergeCatalogs(c, d).categories[0].products[0].qty, 1);
+  });
+  it('переименование категории: свежее побеждает', () => {
+    const a = L.seedCatalog();
+    const b = L.seedCatalog();
+    L.setCategoryName(a, 0, 'Старое', 1000);
+    L.setCategoryName(b, 0, 'Новое', 2000);
+    assert.equal(L.mergeCatalogs(a, b).categories[0].name, 'Новое');
+  });
+  it('очистка списка побеждает старые количества, но не новые добавления', () => {
+    const a = L.seedCatalog();
+    const b = L.seedCatalog();
+    L.incProduct(a, 0, 0, 1000);
+    L.clearList(b, 2000);
+    assert.equal(L.mergeCatalogs(a, b).categories[0].products[0].qty, 0);
+    L.incProduct(a, 0, 1, 3000);
+    assert.equal(L.mergeCatalogs(a, b).categories[0].products[1].qty, 1);
+  });
+  it('seed без меток не затирает реальные данные', () => {
+    const fresh = L.seedCatalog();
+    assert.equal(fresh.categories[0].products[0].ts, 0);
+    const real = L.seedCatalog();
+    L.incProduct(real, 0, 0, 1000);
+    assert.equal(L.mergeCatalogs(fresh, real).categories[0].products[0].qty, 1);
+  });
+  it('catalogsEqual', () => {
+    assert.ok(L.catalogsEqual(L.seedCatalog(), L.seedCatalog()));
+    const a = L.seedCatalog();
+    const b = L.seedCatalog();
+    L.incProduct(b, 0, 0, 1000);
+    assert.ok(!L.catalogsEqual(a, b));
+  });
+});
 describe('mergeDecision: пустое не затирает непустое', () => {
   const st = (catalog, t) => ({ catalog, updatedAt: t });
   it('локально пусто, удалённо seed → pull', () => {
