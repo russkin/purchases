@@ -14,7 +14,11 @@
     var timer = null;
     function start(e) {
       if (e && e.type === 'mousedown' && e.button !== 0) return;
-      timer = setTimeout(function () { timer = null; fn(); }, LONGPRESS_MS);
+      timer = setTimeout(function () {
+        timer = null;
+        node.__lpFiredAt = Date.now();
+        fn();
+      }, LONGPRESS_MS);
     }
     function cancel() {
       if (timer) { clearTimeout(timer); timer = null; }
@@ -26,8 +30,48 @@
     node.addEventListener('contextmenu', function (e) { e.preventDefault(); });
   }
 
+  /* Клик, пришедший следом за сработавшим лонгпрессом (особенность тач-браузеров), игнорируем. */
+  function afterLongPress(node) {
+    return Date.now() - (node.__lpFiredAt || 0) < 800;
+  }
+
+  /* Встроенный диалог: на iOS Chrome системный prompt/confirm из отложенных
+   * обработчиков (таймер лонгпресса) блокируется, поэтому своё модальное окно. */
+  var modalResolve = null;
+  function closeModal(value) {
+    el('modalBack').classList.remove('open');
+    var r = modalResolve;
+    modalResolve = null;
+    if (r) r(value);
+  }
+  function askText(title, initial, showInput) {
+    el('modalText').textContent = title;
+    var input = el('modalInput');
+    input.style.display = showInput === false ? 'none' : '';
+    input.value = initial || '';
+    el('modalBack').classList.add('open');
+    setTimeout(function () { if (showInput !== false) input.focus(); }, 50);
+    return new Promise(function (resolve) { modalResolve = resolve; });
+  }
+  function askConfirm(title) {
+    return askText(title, '', false).then(function (v) { return v === true; });
+  }
+  function wireModal() {
+    el('modalOk').addEventListener('click', function () {
+      var input = el('modalInput');
+      if (input.style.display === 'none') closeModal(true);
+      else closeModal(input.value);
+    });
+    el('modalCancel').addEventListener('click', function () {
+      var input = el('modalInput');
+      closeModal(input.style.display === 'none' ? false : null);
+    });
+  }
+
+  var saveError = '';
   function save() {
-    window.QLStore.save(state).then(function () {
+    window.QLStore.save(state).then(function (ok) {
+      saveError = ok ? '' : 'НЕ СОХРАНЕНО (память браузера недоступна)';
       renderStatus();
       scheduleSync();
     });
@@ -60,21 +104,24 @@
     label.textContent = c.name || '+';
     b.appendChild(label);
     b.addEventListener('click', function () {
+      if (afterLongPress(b)) return;
       if (!c.name) {
-        var name = prompt('Название категории:');
-        if (name === null) return;
-        L.setCategoryName(state, ci, name);
-        save(); render();
+        askText('Название категории:').then(function (name) {
+          if (name === null) return;
+          L.setCategoryName(state, ci, name);
+          save(); render();
+        });
       } else {
         selectedCat = ci;
         render();
       }
     });
     longPress(b, function () {
-      var name = prompt('Название категории (пусто — убрать):', c.name);
-      if (name === null) return;
-      L.setCategoryName(state, ci, name);
-      save(); render();
+      askText('Название категории (пусто — убрать):', c.name).then(function (name) {
+        if (name === null) return;
+        L.setCategoryName(state, ci, name);
+        save(); render();
+      });
     });
     return b;
   }
@@ -105,21 +152,24 @@
       b.appendChild(minus);
     }
     b.addEventListener('click', function () {
+      if (afterLongPress(b)) return;
       if (!p.name) {
-        var name = prompt('Название товара:');
-        if (name === null) return;
-        L.setProductName(state, ci, pi, name);
-        save(); render();
+        askText('Название товара:').then(function (name) {
+          if (name === null) return;
+          L.setProductName(state, ci, pi, name);
+          save(); render();
+        });
       } else {
         L.incProduct(state, ci, pi);
         save(); render();
       }
     });
     longPress(b, function () {
-      var name = prompt('Название товара (пусто — убрать):', p.name);
-      if (name === null) return;
-      L.setProductName(state, ci, pi, name);
-      save(); render();
+      askText('Название товара (пусто — убрать):', p.name).then(function (name) {
+        if (name === null) return;
+        L.setProductName(state, ci, pi, name);
+        save(); render();
+      });
     });
     return b;
   }
@@ -200,6 +250,7 @@
     var parts = [];
     parts.push('Активных: ' + L.activeCount(state.catalog));
     parts.push(navigator.onLine ? 'online' : 'offline');
+    if (saveError) parts.push(saveError);
     if (syncStatus) parts.push(syncStatus);
     el('status').textContent = parts.join(' · ');
     el('netStatus').textContent = navigator.onLine ? '●' : '○';
@@ -216,6 +267,7 @@
   }
 
   function wire() {
+    wireModal();
     el('menuBtn').addEventListener('click', function () {
       el('drawer').classList.toggle('open');
     });
@@ -226,15 +278,19 @@
       state.settings.mode = 'list'; save(); render();
     });
     el('clearList').addEventListener('click', function () {
-      if (!confirm('Очистить список? Количества и отметки будут сброшены.')) return;
-      L.clearList(state.catalog);
-      save(); render();
+      askConfirm('Очистить список? Количества и отметки будут сброшены.').then(function (ok) {
+        if (!ok) return;
+        L.clearList(state.catalog);
+        save(); render();
+      });
     });
     el('clearAll').addEventListener('click', function () {
-      if (!confirm('Очистить ВСЕ кнопки? Названия категорий и товаров будут удалены.')) return;
-      L.clearAll(state.catalog);
-      selectedCat = null;
-      save(); render();
+      askConfirm('Очистить ВСЕ кнопки? Названия категорий и товаров будут удалены.').then(function (ok) {
+        if (!ok) return;
+        L.clearAll(state.catalog);
+        selectedCat = null;
+        save(); render();
+      });
     });
     el('saveSettings').addEventListener('click', function () {
       state.settings.repo = el('repoInput').value.trim() || 'russkin/purchases';

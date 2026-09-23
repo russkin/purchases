@@ -20,7 +20,23 @@
   function lsWrite(state) {
     try {
       localStorage.setItem(LS_KEY, JSON.stringify(state));
-    } catch (e) { /* переполнено/запрещено — игнорируем */ }
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /* Самопроверка памяти: пишет и читает тестовый ключ. */
+  function lsWorks() {
+    try {
+      var k = LS_KEY + '-probe';
+      localStorage.setItem(k, '1');
+      var ok = localStorage.getItem(k) === '1';
+      localStorage.removeItem(k);
+      return ok;
+    } catch (e) {
+      return false;
+    }
   }
 
   function idbOpen() {
@@ -101,10 +117,10 @@
     },
     save: function (state) {
       state.updatedAt = Date.now();
-      lsWrite(state);
+      var ok = lsWrite(state);
       return db().then(function (d) {
-        if (!d) return;
-        return idbSet(d, state).catch(function () {});
+        if (!d) return ok && lsWorks();
+        return idbSet(d, state).then(function () { return true; }).catch(function () { return ok; });
       });
     }
   };

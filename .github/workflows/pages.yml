@@ -22,7 +22,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-      - run: node --test tests/logic.test.js
+      - run: node --test tests/logic.test.js tests/ios.test.js
 
   build:
     needs: test

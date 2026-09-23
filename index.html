@@ -47,6 +47,13 @@
     .row-qty { color: #555; min-width: 40px; text-align: right; }
     footer { position: fixed; bottom: 0; left: 0; right: 0; background: #fff;
       border-top: 1px solid #eee; padding: 6px 14px; font-size: 13px; color: #666; }
+    #modalBack { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,.4); z-index: 50; align-items: center; justify-content: center; padding: 20px; }
+    #modalBack.open { display: flex; }
+    #modalBox { background: #fff; border-radius: 10px; padding: 18px; width: 100%; max-width: 380px; }
+    #modalText { margin-bottom: 10px; }
+    #modalInput { width: 100%; font-size: 18px; padding: 10px; margin-bottom: 12px; }
+    #modalBox .row { display: flex; gap: 8px; justify-content: flex-end; }
   </style>
 </head>
 <body>
@@ -85,6 +92,17 @@
   </main>
 
   <footer id="status">Загрузка…</footer>
+
+  <div id="modalBack">
+    <div id="modalBox">
+      <div id="modalText"></div>
+      <input id="modalInput" autocomplete="off" />
+      <div class="row">
+        <button id="modalOk">OK</button>
+        <button id="modalCancel">Отмена</button>
+      </div>
+    </div>
+  </div>
 
   <script src="./src/logic.js"></script>
   <script src="./store.js"></script>
