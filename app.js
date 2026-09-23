@@ -3,7 +3,7 @@
 
 (function () {
   var LONGPRESS_MS = 3000;
-  var APP_VERSION = 'v16';
+  var APP_VERSION = 'v17';
   var L = window.QLLogic;
   var state = null;
   var selectedCat = null;
@@ -217,12 +217,6 @@
     label.className = 'btn-label';
     label.textContent = p.name || '+';
     b.appendChild(label);
-    if (p.name && p.qty > 0) {
-      var badge = document.createElement('div');
-      badge.className = 'badge';
-      badge.textContent = String(p.qty);
-      b.appendChild(badge);
-    }
     if (p.name) {
       var minus = document.createElement('button');
       minus.className = 'minus';
@@ -235,6 +229,21 @@
         save(); render();
       });
       b.appendChild(minus);
+      var qty = document.createElement('div');
+      qty.className = 'qty';
+      qty.textContent = String(p.qty);
+      b.appendChild(qty);
+      var plus = document.createElement('button');
+      plus.className = 'plus';
+      plus.textContent = '+';
+      plus.setAttribute('aria-label', 'Добавить');
+      plus.addEventListener('click', function (e) {
+        e.stopPropagation();
+        var q2 = L.incProduct(state.catalog, ci, pi);
+        lastAction = p.name + ': ×' + q2;
+        save(); render();
+      });
+      b.appendChild(plus);
     }
     b.addEventListener('click', function () {
       if (afterLongPress(b)) return;
@@ -244,10 +253,6 @@
           L.setProductName(state.catalog, ci, pi, name);
           save(); render();
         });
-      } else {
-        var q = L.incProduct(state.catalog, ci, pi);
-        lastAction = p.name + ': ×' + q;
-        save(); render();
       }
     });
     longPress(b, function () {
