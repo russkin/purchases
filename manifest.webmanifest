@@ -1,12 +1,13 @@
 {
-  "name": "Purchases",
-  "short_name": "Purchases",
-  "description": "Простое PWA для учёта покупок",
+  "name": "Быстрый список",
+  "short_name": "Список",
+  "description": "Семейные списки покупок, работает офлайн",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#f5f7fa",
-  "theme_color": "#4a90e2",
+  "orientation": "any",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
   "icons": [
     {
       "src": "./icon.svg",

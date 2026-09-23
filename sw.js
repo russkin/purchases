@@ -1,5 +1,15 @@
-const CACHE = 'purchases-v1';
-const ASSETS = ['./', './index.html', './manifest.webmanifest', './icon.svg'];
+const CACHE = 'quicklist-v2';
+const ASSETS = [
+  './',
+  './index.html',
+  './app.js',
+  './store.js',
+  './sync.js',
+  './src/logic.js',
+  './manifest.webmanifest',
+  './icon.svg',
+  './docs/USER_GUIDE.html'
+];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(ASSETS)).then(() => self.skipWaiting()));
@@ -14,5 +24,17 @@ self.addEventListener('activate', (e) => {
 });
 
 self.addEventListener('fetch', (e) => {
-  e.respondWith(caches.match(e.request).then((hit) => hit || fetch(e.request)));
+  if (e.request.method !== 'GET') return;
+  e.respondWith(
+    caches.match(e.request).then((hit) => {
+      const net = fetch(e.request).then((res) => {
+        if (res.ok && e.request.url.startsWith(self.location.origin)) {
+          const copy = res.clone();
+          caches.open(CACHE).then((c) => c.put(e.request, copy));
+        }
+        return res;
+      }).catch(() => hit);
+      return hit || net;
+    })
+  );
 });

@@ -15,14 +15,26 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: node --test tests/logic.test.js
+
   build:
+    needs: test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - name: Assemble site
         run: |
-          mkdir -p _site
-          cp index.html manifest.webmanifest sw.js icon.svg _site/
+          mkdir -p _site/docs _site/src
+          cp index.html app.js store.js sync.js manifest.webmanifest sw.js icon.svg README.md _site/
+          cp src/logic.js _site/src/logic.js
+          cp docs/USER_GUIDE.html _site/docs/USER_GUIDE.html
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
