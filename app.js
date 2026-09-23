@@ -3,7 +3,7 @@
 
 (function () {
   var LONGPRESS_MS = 3000;
-  var APP_VERSION = 'v21';
+  var APP_VERSION = 'v22';
   var L = window.QLLogic;
   var state = null;
   var selectedCat = null;
@@ -398,8 +398,17 @@
       });
     });
     el('syncBtn').addEventListener('click', doSync);
+    el('gearBtn').addEventListener('click', function (e) {
+      e.stopPropagation();
+      el('gearMenu').classList.toggle('open');
+    });
     el('diagBtn').addEventListener('click', function () {
+      el('gearMenu').classList.remove('open');
       showInfo('Диагностика', diagText());
+    });
+    document.addEventListener('click', function (e) {
+      var m = el('gearMenu');
+      if (m.classList.contains('open') && !m.contains(e.target)) m.classList.remove('open');
     });
     window.addEventListener('online', render);
     window.addEventListener('offline', render);
