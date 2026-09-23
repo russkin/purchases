@@ -3,7 +3,7 @@
 
 (function () {
   var LONGPRESS_MS = 3000;
-  var APP_VERSION = 'v22';
+  var APP_VERSION = 'v23';
   var L = window.QLLogic;
   var state = null;
   var selectedCat = null;
@@ -372,6 +372,7 @@
       state.settings.mode = 'list'; save(); render();
     });
     el('clearList').addEventListener('click', function () {
+      el('gearMenu').classList.remove('open');
       askConfirm('Очистить список? Количества и отметки будут сброшены.').then(function (ok) {
         if (!ok) return;
         L.clearList(state.catalog);
@@ -379,6 +380,7 @@
       });
     });
     el('clearAll').addEventListener('click', function () {
+      el('gearMenu').classList.remove('open');
       askConfirm('Очистить ВСЕ кнопки? Названия категорий и товаров будут удалены.').then(function (ok) {
         if (!ok) return;
         L.clearAll(state.catalog);
@@ -392,6 +394,7 @@
       save(); render();
     });
     el('clearCache').addEventListener('click', function () {
+      el('gearMenu').classList.remove('open');
       askConfirm('Очистить кэш приложения? Списки и названия сохранятся, страница перезагрузится.').then(function (ok) {
         if (!ok) return;
         clearCacheNow();
