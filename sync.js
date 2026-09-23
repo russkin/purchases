@@ -26,6 +26,9 @@
       return r.json();
     }).then(function (body) {
       if (!body) return null;
+      if (typeof body.content !== 'string') {
+        throw new Error('github-get: ' + (body.message ? body.message : 'bad response'));
+      }
       var json = JSON.parse(decodeURIComponent(escape(atob(body.content.replace(/\n/g, '')))));
       return { sha: body.sha, state: json };
     });
@@ -45,12 +48,19 @@
     });
   }
 
+  function fmtErr(e) {
+    if (!e) return 'unknown';
+    var name = e.name ? e.name + ': ' : '';
+    var msg = e.message || String(e);
+    return (name + msg).slice(0, 300);
+  }
+
   function syncNow(state) {
     var repo = state.settings.repo;
     var token = state.settings.token;
     if (!token) return Promise.resolve({ status: 'no-token', state: state });
     return attempt(state, repo, token, 3).catch(function (e) {
-      return { status: 'error', state: state, error: String(e && e.message || e) };
+      return { status: 'error', state: state, error: fmtErr(e) };
     });
   }
 

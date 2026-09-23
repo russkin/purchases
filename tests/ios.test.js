@@ -47,5 +47,7 @@ describe('ios: без системных диалогов', () => {
   });
   it('синк объединяет попродуктово', () => {
     assert.ok(syncSrc.includes('mergeCatalogs'), 'нет mergeCatalogs в sync');
+    assert.ok(syncSrc.includes('bad response'), 'нет проверки тела ответа API');
+    assert.ok(syncSrc.includes('fmtErr'), 'нет форматирования ошибок');
   });
 });
