@@ -3,7 +3,7 @@
 
 (function () {
   var LONGPRESS_MS = 3000;
-  var APP_VERSION = 'v13';
+  var APP_VERSION = 'v14';
   var L = window.QLLogic;
   var state = null;
   var selectedCat = null;
@@ -318,9 +318,9 @@
         var qty = document.createElement('span');
         qty.className = 'row-qty';
         qty.textContent = it.product.qty > 0 ? ('×' + it.product.qty) : '';
+        row.appendChild(qty);
         row.appendChild(cb);
         row.appendChild(nm);
-        row.appendChild(qty);
         longPress(row, function () {
           L.removeFromList(state.catalog, it.catIndex, it.prodIndex);
           save(); render();
