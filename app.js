@@ -3,7 +3,7 @@
 
 (function () {
   var LONGPRESS_MS = 3000;
-  var APP_VERSION = 'v24';
+  var APP_VERSION = 'v25';
   var L = window.QLLogic;
   var state = null;
   var selectedCat = null;
@@ -362,22 +362,25 @@
     var isAdd = state.settings.mode === 'add';
     el('screen-add').style.display = isAdd ? '' : 'none';
     el('screen-list').style.display = isAdd ? 'none' : '';
-    el('modeAdd').classList.toggle('on', isAdd);
-    el('modeList').classList.toggle('on', !isAdd);
+    el('menuBtn').textContent = isAdd ? 'Д' : 'С';
+    el('menuBtn').title = isAdd ? 'Режим добавления (нажми — список)' : 'Режим списка (нажми — добавление)';
     if (isAdd) renderAdd(); else renderList();
     renderStatus();
   }
 
   function wire() {
     wireModal();
-    el('menuBtn').addEventListener('click', function () {
+    /* Кнопка-переключатель режимов: показывает текущий (Д/С), нажатие меняет.
+     * Долгое нажатие открывает настройки (бывший ☰). */
+    var menuBtn = el('menuBtn');
+    menuBtn.addEventListener('click', function () {
+      if (afterLongPress(menuBtn)) return;
+      state.settings.mode = state.settings.mode === 'add' ? 'list' : 'add';
+      selectedCat = null;
+      save(); render();
+    });
+    longPress(menuBtn, function () {
       el('drawer').classList.toggle('open');
-    });
-    el('modeAdd').addEventListener('click', function () {
-      state.settings.mode = 'add'; selectedCat = null; save(); render();
-    });
-    el('modeList').addEventListener('click', function () {
-      state.settings.mode = 'list'; save(); render();
     });
     el('clearList').addEventListener('click', function () {
       el('gearMenu').classList.remove('open');
