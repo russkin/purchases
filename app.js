@@ -322,6 +322,7 @@
       if (!document.hidden && state) {
         L.purgeChecked(state.catalog, Date.now());
         render();
+        if (state.settings.token && navigator.onLine) doSync();
       }
     });
   }
@@ -339,6 +340,8 @@
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('./sw.js').catch(function () {});
       }
+      /* Автоподтягивание общего списка при открытии (кнопка ⇅ больше не обязательна). */
+      if (state.settings.token && navigator.onLine) doSync();
     });
   }
 

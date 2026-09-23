@@ -203,6 +203,34 @@ function activeCount(catalog) {
   return n;
 }
 
+/* --- Решение о слиянии локального и удалённого состояний --- */
+
+function isCatalogEmpty(catalog) {
+  if (!catalog || !catalog.categories) return true;
+  for (var i = 0; i < catalog.categories.length; i++) {
+    var c = catalog.categories[i];
+    if (c.name) return false;
+    for (var j = 0; j < c.products.length; j++) {
+      if (c.products[j].name) return false;
+    }
+  }
+  return true;
+}
+
+/* Пустое состояние никогда не затирает непустое (защита от рассинхрона часов
+ * и случайных очисток): 'pull' | 'push' | 'in-sync'. */
+function mergeDecision(localState, remoteState) {
+  var localEmpty = isCatalogEmpty(localState.catalog);
+  var remoteEmpty = isCatalogEmpty(remoteState.catalog);
+  if (localEmpty && !remoteEmpty) return 'pull';
+  if (!localEmpty && remoteEmpty) return 'push';
+  var rTime = remoteState.updatedAt || 0;
+  var lTime = localState.updatedAt || 0;
+  if (rTime > lTime) return 'pull';
+  if (lTime > rTime) return 'push';
+  return 'in-sync';
+}
+
 var api = {
   MAX_CATEGORIES: MAX_CATEGORIES,
   MAX_PRODUCTS: MAX_PRODUCTS,
@@ -222,7 +250,9 @@ var api = {
   startOfDayMs: startOfDayMs,
   purgeChecked: purgeChecked,
   listView: listView,
-  activeCount: activeCount
+  activeCount: activeCount,
+  isCatalogEmpty: isCatalogEmpty,
+  mergeDecision: mergeDecision
 };
 
 if (typeof module !== 'undefined' && module.exports) {

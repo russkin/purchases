@@ -1,7 +1,9 @@
 /* sync.js — необязательная синхронизация через GitHub Contents API.
  * Файл состояния: data/state.json в ветке main: { updatedAt, catalog }.
- * Стратегия: last-write-wins по updatedAt. Токен хранится только
- * в настройках на устройстве (localStorage/IndexedDB), в репозиторий не попадает.
+ * Решение о слиянии — QLLogic.mergeDecision: last-write-wins по updatedAt,
+ * но пустой каталог никогда не затирает непустой (защита от сбоя часов
+ * и случайных очисток). Токен хранится только в настройках на устройстве,
+ * в репозиторий не попадает.
  */
 'use strict';
 
@@ -49,16 +51,19 @@
     if (!token) return Promise.resolve({ status: 'no-token', state: state });
     return getRemote(repo, token).then(function (remote) {
       if (!remote) {
+        if (window.QLLogic.isCatalogEmpty(state.catalog)) {
+          return { status: 'in-sync', state: state };
+        }
         return putRemote(repo, token, { updatedAt: state.updatedAt, catalog: state.catalog }, null)
           .then(function () { return { status: 'pushed', state: state }; });
       }
-      var rTime = remote.state.updatedAt || 0;
-      if (rTime > state.updatedAt) {
+      var decision = window.QLLogic.mergeDecision(state, remote.state);
+      if (decision === 'pull') {
         state.catalog = remote.state.catalog;
-        state.updatedAt = rTime;
+        state.updatedAt = remote.state.updatedAt || state.updatedAt;
         return { status: 'pulled', state: state, sha: remote.sha };
       }
-      if (state.updatedAt > rTime) {
+      if (decision === 'push') {
         return putRemote(repo, token, { updatedAt: state.updatedAt, catalog: state.catalog }, remote.sha)
           .then(function () { return { status: 'pushed', state: state }; });
       }

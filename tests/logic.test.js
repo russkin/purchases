@@ -117,6 +117,26 @@ describe('очистки и полуночное удаление', () => {
   });
 });
 
+describe('mergeDecision: пустое не затирает непустое', () => {
+  const st = (catalog, t) => ({ catalog, updatedAt: t });
+  it('локально пусто, удалённо seed → pull', () => {
+    assert.equal(L.mergeDecision(st(L.blankCatalog(), 200), st(L.seedCatalog(), 100)), 'pull');
+  });
+  it('локально seed, удалённо пусто → push', () => {
+    assert.equal(L.mergeDecision(st(L.seedCatalog(), 100), st(L.blankCatalog(), 200)), 'push');
+  });
+  it('оба непустые → побеждает newer', () => {
+    const a = st(L.seedCatalog(), 100);
+    const b = st(L.seedCatalog(), 200);
+    assert.equal(L.mergeDecision(a, b), 'pull');
+    assert.equal(L.mergeDecision(b, a), 'push');
+    assert.equal(L.mergeDecision(a, st(L.seedCatalog(), 100)), 'in-sync');
+  });
+  it('оба пустые → решает время (равное время → in-sync)', () => {
+    assert.equal(L.mergeDecision(st(L.blankCatalog(), 100), st(L.blankCatalog(), 100)), 'in-sync');
+    assert.equal(L.mergeDecision(st(L.blankCatalog(), 300), st(L.blankCatalog(), 100)), 'push');
+  });
+});
 describe('seed-каталог', () => {
   it('seedCatalog: 7 категорий с товарами, количества нулевые', () => {
     const c = L.seedCatalog();
