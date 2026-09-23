@@ -7,8 +7,18 @@
   var state = null;
   var selectedCat = null;
   var syncStatus = '';
+  var lastAction = '';
+  var bootError = '';
 
   function el(id) { return document.getElementById(id); }
+
+  window.addEventListener('error', function (e) {
+    bootError = 'ОШИБКА: ' + (e && e.message ? e.message : e);
+    try { renderStatus(); } catch (err) {
+      var s = document.getElementById('status');
+      if (s) s.textContent = bootError;
+    }
+  });
 
   function longPress(node, fn) {
     var timer = null;
@@ -146,7 +156,8 @@
       minus.setAttribute('aria-label', 'Уменьшить');
       minus.addEventListener('click', function (e) {
         e.stopPropagation();
-        L.decProduct(state, ci, pi);
+        var q = L.decProduct(state, ci, pi);
+        lastAction = p.name + ': ×' + q;
         save(); render();
       });
       b.appendChild(minus);
@@ -160,7 +171,8 @@
           save(); render();
         });
       } else {
-        L.incProduct(state, ci, pi);
+        var q = L.incProduct(state, ci, pi);
+        lastAction = p.name + ': ×' + q;
         save(); render();
       }
     });
@@ -248,10 +260,12 @@
 
   function renderStatus() {
     var parts = [];
-    parts.push('Активных: ' + L.activeCount(state.catalog));
+    if (state) parts.push('Активных: ' + L.activeCount(state.catalog));
     parts.push(navigator.onLine ? 'online' : 'offline');
+    if (lastAction) parts.push(lastAction);
     if (saveError) parts.push(saveError);
     if (syncStatus) parts.push(syncStatus);
+    if (bootError) parts.push(bootError);
     el('status').textContent = parts.join(' · ');
     el('netStatus').textContent = navigator.onLine ? '●' : '○';
   }

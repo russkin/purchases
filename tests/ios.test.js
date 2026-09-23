@@ -20,4 +20,8 @@ describe('ios: без системных диалогов', () => {
     assert.ok(appSrc.includes('askText'), 'нет askText');
     assert.ok(appSrc.includes('afterLongPress'), 'нет afterLongPress');
   });
+  it('есть диагностика нажатий: onerror и lastAction', () => {
+    assert.ok(appSrc.includes("addEventListener('error'"), 'нет onerror');
+    assert.ok(appSrc.includes('lastAction'), 'нет lastAction');
+  });
 });
