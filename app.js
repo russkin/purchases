@@ -3,7 +3,7 @@
 
 (function () {
   var LONGPRESS_MS = 3000;
-  var APP_VERSION = 'v18';
+  var APP_VERSION = 'v19';
   var L = window.QLLogic;
   var state = null;
   var selectedCat = null;
@@ -212,7 +212,7 @@
 
   function prodButton(c, ci, p, pi) {
     var b = document.createElement('div');
-    b.className = 'btn' + (p.name ? '' : ' empty');
+    b.className = 'btn' + (p.name ? '' : ' empty') + (p.qty > 0 ? ' has-active' : '');
     var label = document.createElement('div');
     label.className = 'btn-label';
     label.textContent = p.name || '+';
