@@ -3,7 +3,7 @@
 
 (function () {
   var LONGPRESS_MS = 3000;
-  var APP_VERSION = 'v20';
+  var APP_VERSION = 'v21';
   var L = window.QLLogic;
   var state = null;
   var selectedCat = null;
@@ -212,7 +212,7 @@
 
   function prodButton(c, ci, p, pi) {
     var b = document.createElement('div');
-    b.className = 'btn' + (p.name ? '' : ' empty') + (p.qty > 0 ? ' has-active' : '');
+    b.className = 'btn' + (p.name ? '' : ' empty') + (p.checked ? ' bought' : (p.qty > 0 ? ' has-active' : ''));
     var label = document.createElement('div');
     label.className = 'btn-label';
     label.textContent = p.name || '+';
@@ -244,6 +244,7 @@
         save(); render();
       });
       b.appendChild(plus);
+      if (p.checked) { minus.disabled = true; plus.disabled = true; }
     }
     b.addEventListener('click', function () {
       if (afterLongPress(b)) return;
