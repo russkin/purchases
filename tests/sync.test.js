@@ -1,0 +1,189 @@
+'use strict';
+/* Тесты синхронизации: fetch мокается, логика настоящая (src/logic.js). */
+const { describe, it } = require('node:test');
+const assert = require('node:assert/strict');
+const L = require('../src/logic.js');
+const factory = require('../sync.js');
+
+function stateWith(catalog, t) {
+  return { catalog, settings: { mode: 'add', repo: 'r/x', token: 'TOK' }, updatedAt: t };
+}
+
+function fileResp(sha, state) {
+  return {
+    status: 200, ok: true,
+    json: async () => ({ sha, content: Buffer.from(JSON.stringify(state)).toString('base64') })
+  };
+}
+
+function errResp(status, message) {
+  return { status, ok: false, json: async () => ({ message: message || ('err ' + status) }) };
+}
+
+/* Мок fetch: handler(url, opts, n) возвращает response. */
+function stubFetch(handler) {
+  const calls = [];
+  const fn = (url, opts) => { calls.push({ url, opts: opts || {} }); return handler(url, opts || {}, calls.length); };
+  fn.calls = calls;
+  return fn;
+}
+
+function decodePut(call) {
+  const body = JSON.parse(call.opts.body);
+  return { payload: body, state: JSON.parse(Buffer.from(body.content, 'base64').toString('utf8')) };
+}
+
+function seedAt(t) {
+  const c = L.seedCatalog();
+  return { catalog: c, updatedAt: t };
+}
+
+describe('syncNow: базовые исходы', () => {
+  it('без токена — no-token, сеть не трогаем', async () => {
+    const fetch = stubFetch(() => { throw new Error('must not fetch'); });
+    const api = factory(L, fetch);
+    const s = stateWith(L.seedCatalog(), 100);
+    s.settings.token = '';
+    const res = await api.syncNow(s);
+    assert.equal(res.status, 'no-token');
+    assert.equal(fetch.calls.length, 0);
+  });
+
+  it('файла нет + локально пусто — in-sync без PUT', async () => {
+    const fetch = stubFetch(async () => ({ status: 404, ok: false, json: async () => ({}) }));
+    const api = factory(L, fetch);
+    const res = await api.syncNow(stateWith(L.blankCatalog(), 100));
+    assert.equal(res.status, 'in-sync');
+    assert.equal(fetch.calls.length, 1);
+  });
+
+  it('файла нет + локально есть данные — pushed без sha', async () => {
+    const fetch = stubFetch(async (url, opts) => {
+      if (opts.method === 'PUT') return { status: 201, ok: true, json: async () => ({}) };
+      return { status: 404, ok: false, json: async () => ({}) };
+    });
+    const api = factory(L, fetch);
+    const res = await api.syncNow(stateWith(L.seedCatalog(), 100));
+    assert.equal(res.status, 'pushed');
+    assert.equal(fetch.calls.length, 2);
+    assert.ok(!JSON.parse(fetch.calls[1].opts.body).sha);
+  });
+
+  it('удалённый новее целиком — pulled', async () => {
+    const remote = seedAt(200);
+    L.incProduct(remote.catalog, 0, 0, 200);
+    const fetch = stubFetch(async () => fileResp('AAA', remote));
+    const api = factory(L, fetch);
+    const local = stateWith(L.seedCatalog(), 100);
+    const res = await api.syncNow(local);
+    assert.equal(res.status, 'pulled');
+    assert.equal(res.state.catalog.categories[0].products[0].qty, 1);
+    assert.equal(fetch.calls.length, 1);
+  });
+
+  it('локальный новее — pushed с sha', async () => {
+    const remote = seedAt(100);
+    const fetch = stubFetch(async (url, opts) => {
+      if (opts.method === 'PUT') return { status: 201, ok: true, json: async () => ({}) };
+      return fileResp('AAA', remote);
+    });
+    const api = factory(L, fetch);
+    const local = stateWith(L.seedCatalog(), 200);
+    L.incProduct(local.catalog, 0, 0, 200);
+    const res = await api.syncNow(local);
+    assert.equal(res.status, 'pushed');
+    assert.equal(JSON.parse(fetch.calls[1].opts.body).sha, 'AAA');
+    const sent = decodePut(fetch.calls[1]).state;
+    assert.equal(sent.catalog.categories[0].products[0].qty, 1);
+  });
+
+  it('одинаковые — in-sync без PUT', async () => {
+    const snap = seedAt(100);
+    const fetch = stubFetch(async () => fileResp('AAA', JSON.parse(JSON.stringify(snap))));
+    const api = factory(L, fetch);
+    const res = await api.syncNow(stateWith(L.seedCatalog(), 100));
+    assert.equal(res.status, 'in-sync');
+    assert.equal(fetch.calls.length, 1);
+  });
+});
+
+describe('syncNow: попродуктовое слияние', () => {
+  it('параллельные правки объединяются и публикуются', async () => {
+    const remote = seedAt(100);
+    L.incProduct(remote.catalog, 1, 0, 100);
+    const puts = [];
+    const fetch = stubFetch(async (url, opts) => {
+      if (opts.method === 'PUT') {
+        puts.push(decodePut({ opts }).state);
+        return { status: 201, ok: true, json: async () => ({}) };
+      }
+      return fileResp('AAA', remote);
+    });
+    const api = factory(L, fetch);
+    const local = stateWith(L.seedCatalog(), 100);
+    L.incProduct(local.catalog, 0, 0, 100);
+    const res = await api.syncNow(local);
+    assert.equal(res.status, 'merged');
+    assert.equal(puts.length, 1);
+    assert.equal(puts[0].catalog.categories[0].products[0].qty, 1);
+    assert.equal(puts[0].catalog.categories[1].products[0].qty, 1);
+    assert.equal(res.state.catalog.categories[0].products[0].qty, 1);
+  });
+});
+
+describe('syncNow: конфликты и ошибки', () => {
+  it('409 один раз — ретрай и pushed', async () => {
+    const remote = seedAt(100);
+    let puts = 0;
+    const fetch = stubFetch(async (url, opts) => {
+      if (opts.method === 'PUT') {
+        puts += 1;
+        if (puts === 1) return errResp(409, 'conflict');
+        return { status: 201, ok: true, json: async () => ({}) };
+      }
+      return fileResp('AAA', remote);
+    });
+    const api = factory(L, fetch);
+    const local = stateWith(L.seedCatalog(), 200);
+    L.incProduct(local.catalog, 0, 0, 200);
+    const res = await api.syncNow(local);
+    assert.equal(res.status, 'pushed');
+    assert.equal(puts, 2);
+  });
+
+  it('409 всегда — error', async () => {
+    const remote = seedAt(100);
+    const fetch = stubFetch(async (url, opts) => {
+      if (opts.method === 'PUT') return errResp(409, 'conflict');
+      return fileResp('AAA', remote);
+    });
+    const api = factory(L, fetch);
+    const local = stateWith(L.seedCatalog(), 200);
+    L.incProduct(local.catalog, 0, 0, 200);
+    const res = await api.syncNow(local);
+    assert.equal(res.status, 'error');
+    assert.match(res.error, /409/);
+  });
+
+  it('GET 500 — error с кодом', async () => {
+    const fetch = stubFetch(async () => errResp(500, 'boom'));
+    const api = factory(L, fetch);
+    const res = await api.syncNow(stateWith(L.seedCatalog(), 100));
+    assert.equal(res.status, 'error');
+    assert.match(res.error, /github-get 500/);
+  });
+
+  it('тело без content — error с текстом API', async () => {
+    const fetch = stubFetch(async () => ({ status: 403, ok: true, json: async () => ({ message: 'rate limited' }) }));
+    const api = factory(L, fetch);
+    const res = await api.syncNow(stateWith(L.seedCatalog(), 100));
+    assert.equal(res.status, 'error');
+    assert.match(res.error, /rate limited/);
+  });
+
+  it('fmtErr форматирует', async () => {
+    const api = factory(L, stubFetch(() => { throw new Error('x'); }));
+    assert.equal(api.fmtErr(new TypeError('bad')), 'TypeError: bad');
+    assert.equal(api.fmtErr(null), 'unknown');
+  });
+});

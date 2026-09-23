@@ -1,13 +1,23 @@
 /* sync.js — необязательная синхронизация через GitHub Contents API.
  * Файл состояния: data/state.json в ветке main: { updatedAt, catalog }.
  * Алгоритм: скачать общий файл, попродуктово объединить с локальным
- * (QLLogic.mergeCatalogs: для каждой ячейки побеждает свежая метка ts),
+ * (mergeCatalogs: для каждой ячейки побеждает свежая метка ts),
  * опубликовать объединённый результат. Токен хранится только
  * в настройках на устройстве, в репозиторий не попадает.
+ *
+ * Зависимости (L, fetchImpl) инжектятся для тестируемости в Node;
+ * в браузере берутся window.QLLogic / window.fetch.
  */
 'use strict';
 
-(function () {
+(function (root, factory) {
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = factory;
+  } else {
+    var fetchImpl = (root.fetch) ? root.fetch.bind(root) : null;
+    root.QLSync = factory(root.QLLogic, fetchImpl);
+  }
+}(typeof window !== 'undefined' ? window : {}, function (L, fetchImpl) {
   function apiBase(repo) {
     return 'https://api.github.com/repos/' + repo + '/contents/data/state.json';
   }
@@ -20,7 +30,7 @@
   }
 
   function getRemote(repo, token) {
-    return fetch(apiBase(repo) + '?ref=main', { headers: headers(token) }).then(function (r) {
+    return fetchImpl(apiBase(repo) + '?ref=main', { headers: headers(token) }).then(function (r) {
       if (r.status === 404) return null;
       if (!r.ok) throw new Error('github-get ' + r.status);
       return r.json();
@@ -38,7 +48,7 @@
     var content = btoa(unescape(encodeURIComponent(JSON.stringify(state))));
     var payload = { message: 'Sync quicklist', content: content, branch: 'main' };
     if (sha) payload.sha = sha;
-    return fetch(apiBase(repo), {
+    return fetchImpl(apiBase(repo), {
       method: 'PUT',
       headers: Object.assign({ 'Content-Type': 'application/json' }, headers(token)),
       body: JSON.stringify(payload)
@@ -67,7 +77,6 @@
   /* Одна попытка: скачать → объединить → опубликовать.
    * При 409/422 (кто-то запушил между GET и PUT) перечитать и объединить заново. */
   function attempt(state, repo, token, triesLeft) {
-    var L = window.QLLogic;
     return getRemote(repo, token).then(function (remote) {
       if (!remote) {
         if (L.isCatalogEmpty(state.catalog)) {
@@ -106,5 +115,5 @@
     });
   }
 
-  window.QLSync = { syncNow: syncNow };
-})();
+  return { syncNow: syncNow, getRemote: getRemote, putRemote: putRemote, fmtErr: fmtErr };
+}));
