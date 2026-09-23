@@ -3,7 +3,7 @@
 
 (function () {
   var LONGPRESS_MS = 3000;
-  var APP_VERSION = 'v23';
+  var APP_VERSION = 'v24';
   var L = window.QLLogic;
   var state = null;
   var selectedCat = null;
@@ -60,15 +60,18 @@
   function closeModal(value) {
     el('modalBack').classList.remove('open');
     el('modalCancel').style.display = '';
+    el('modalClear').style.display = 'none';
     var r = modalResolve;
     modalResolve = null;
     if (r) r(value);
   }
-  function askText(title, initial, showInput) {
+  function askText(title, initial, showInput, showClear) {
     el('modalText').textContent = title;
     var input = el('modalInput');
     input.style.display = showInput === false ? 'none' : '';
     input.value = initial || '';
+    el('modalOk').textContent = showInput === false ? 'OK' : 'Сохранить';
+    el('modalClear').style.display = showClear ? '' : 'none';
     el('modalBack').classList.add('open');
     setTimeout(function () { if (showInput !== false) input.focus(); }, 50);
     return new Promise(function (resolve) { modalResolve = resolve; });
@@ -79,6 +82,8 @@
   function showInfo(title, body) {
     el('modalText').textContent = title + '\n\n' + body;
     el('modalInput').style.display = 'none';
+    el('modalOk').textContent = 'OK';
+    el('modalClear').style.display = 'none';
     el('modalCancel').style.display = 'none';
     el('modalBack').classList.add('open');
     return new Promise(function (resolve) { modalResolve = resolve; });
@@ -107,6 +112,9 @@
     el('modalCancel').addEventListener('click', function () {
       var input = el('modalInput');
       closeModal(input.style.display === 'none' ? false : null);
+    });
+    el('modalClear').addEventListener('click', function () {
+      closeModal('');
     });
   }
 
@@ -201,7 +209,7 @@
       }
     });
     longPress(b, function () {
-      askText('Название категории (пусто — убрать):', c.name).then(function (name) {
+      askText('Новое название категории:', c.name, true, true).then(function (name) {
         if (name === null) return;
         L.setCategoryName(state.catalog, ci, name);
         save(); render();
@@ -257,7 +265,7 @@
       }
     });
     longPress(b, function () {
-      askText('Название товара (пусто — убрать):', p.name).then(function (name) {
+      askText('Новое название товара:', p.name, true, true).then(function (name) {
         if (name === null) return;
         L.setProductName(state.catalog, ci, pi, name);
         save(); render();
