@@ -3,7 +3,7 @@
 
 (function () {
   var LONGPRESS_MS = 3000;
-  var APP_VERSION = 'v25';
+  var APP_VERSION = 'v26';
   var L = window.QLLogic;
   var state = null;
   var selectedCat = null;
@@ -370,17 +370,11 @@
 
   function wire() {
     wireModal();
-    /* Кнопка-переключатель режимов: показывает текущий (Д/С), нажатие меняет.
-     * Долгое нажатие открывает настройки (бывший ☰). */
-    var menuBtn = el('menuBtn');
-    menuBtn.addEventListener('click', function () {
-      if (afterLongPress(menuBtn)) return;
+    /* Кнопка-переключатель режимов: показывает текущий (Д/С), нажатие меняет. */
+    el('menuBtn').addEventListener('click', function () {
       state.settings.mode = state.settings.mode === 'add' ? 'list' : 'add';
       selectedCat = null;
       save(); render();
-    });
-    longPress(menuBtn, function () {
-      el('drawer').classList.toggle('open');
     });
     el('clearList').addEventListener('click', function () {
       el('gearMenu').classList.remove('open');
@@ -402,6 +396,7 @@
     el('saveSettings').addEventListener('click', function () {
       state.settings.repo = el('repoInput').value.trim() || 'russkin/purchases';
       state.settings.token = el('tokenInput').value.trim();
+      el('gearMenu').classList.remove('open');
       save(); render();
     });
     el('clearCache').addEventListener('click', function () {
