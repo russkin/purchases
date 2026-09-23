@@ -59,7 +59,7 @@
       }
       var decision = window.QLLogic.mergeDecision(state, remote.state);
       if (decision === 'pull') {
-        state.catalog = remote.state.catalog;
+        state.catalog = window.QLLogic.normalizeCatalog(remote.state.catalog);
         state.updatedAt = remote.state.updatedAt || state.updatedAt;
         return { status: 'pulled', state: state, sha: remote.sha };
       }

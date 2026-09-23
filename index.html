@@ -52,7 +52,8 @@
       background: rgba(0,0,0,.4); z-index: 50; align-items: center; justify-content: center; padding: 20px; }
     #modalBack.open { display: flex; }
     #modalBox { background: #fff; border-radius: 10px; padding: 18px; width: 100%; max-width: 380px; }
-    #modalText { margin-bottom: 10px; }
+    #modalText { margin-bottom: 10px; white-space: pre-wrap; word-break: break-word;
+      max-height: 50vh; overflow-y: auto; font-size: 14px; }
     #modalInput { width: 100%; font-size: 18px; padding: 10px; margin-bottom: 12px; }
     #modalBox .row { display: flex; gap: 8px; justify-content: flex-end; }
   </style>
@@ -63,6 +64,7 @@
     <h1>Быстрый список</h1>
     <span id="netStatus" title="Сеть">●</span>
     <button id="syncBtn" title="Синхронизировать">⇅</button>
+    <button id="diagBtn" title="Диагностика">ⓘ</button>
   </header>
 
   <nav id="drawer">
@@ -81,7 +83,8 @@
       <button id="saveSettings">Сохранить</button>
     </div>
     <small>Синхронизация необязательна: без токена всё работает локально и офлайн.
-      <a href="./docs/USER_GUIDE.html">Инструкция</a></small>
+      <a href="./docs/USER_GUIDE.html">Инструкция</a>
+      <span id="appVer"></span></small>
   </nav>
 
   <main id="screen-add">

@@ -98,7 +98,12 @@
   }
 
   function sanitize(state) {
-    if (!state || !state.catalog || !state.catalog.categories) return defaultState();
+    if (!state || typeof state !== 'object') return defaultState();
+    if (!state.catalog || typeof state.catalog !== 'object') {
+      state.catalog = window.QLLogic.seedCatalog();
+    } else {
+      state.catalog = window.QLLogic.normalizeCatalog(state.catalog);
+    }
     if (!state.settings) state.settings = { mode: 'add', repo: 'russkin/purchases', token: '' };
     if (!state.updatedAt) state.updatedAt = Date.now();
     return state;

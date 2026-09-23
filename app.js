@@ -3,17 +3,26 @@
 
 (function () {
   var LONGPRESS_MS = 3000;
+  var APP_VERSION = 'v7';
   var L = window.QLLogic;
   var state = null;
   var selectedCat = null;
   var syncStatus = '';
   var lastAction = '';
   var bootError = '';
+  var bootStack = '';
 
   function el(id) { return document.getElementById(id); }
 
   window.addEventListener('error', function (e) {
-    bootError = 'ОШИБКА: ' + (e && e.message ? e.message : e);
+    var msg = (e && e.message) ? e.message : String(e);
+    var stack = '';
+    try {
+      if (e && e.error && e.error.stack) stack = String(e.error.stack);
+    } catch (x) { stack = ''; }
+    if (!stack) stack = 'at ' + ((e && e.filename) ? e.filename : '?') + ':' + ((e && e.lineno) ? e.lineno : '?');
+    bootError = 'ОШИБКА: ' + msg;
+    bootStack = stack.slice(0, 1500);
     try { renderStatus(); } catch (err) {
       var s = document.getElementById('status');
       if (s) s.textContent = bootError;
@@ -50,6 +59,7 @@
   var modalResolve = null;
   function closeModal(value) {
     el('modalBack').classList.remove('open');
+    el('modalCancel').style.display = '';
     var r = modalResolve;
     modalResolve = null;
     if (r) r(value);
@@ -65,6 +75,28 @@
   }
   function askConfirm(title) {
     return askText(title, '', false).then(function (v) { return v === true; });
+  }
+  function showInfo(title, body) {
+    el('modalText').textContent = title + '\n\n' + body;
+    el('modalInput').style.display = 'none';
+    el('modalCancel').style.display = 'none';
+    el('modalBack').classList.add('open');
+    return new Promise(function (resolve) { modalResolve = resolve; });
+  }
+  function diagText() {
+    var lines = [];
+    lines.push('Версия: ' + APP_VERSION);
+    if (!state) return 'Состояние не загружено.';
+    lines.push('Режим: ' + state.settings.mode);
+    lines.push('Категорий: ' + state.catalog.categories.length);
+    lines.push('Выбрана: ' + selectedCat);
+    lines.push('Активных: ' + L.activeCount(state.catalog));
+    lines.push('updatedAt: ' + state.updatedAt);
+    lines.push('Синк: ' + (syncStatus || '—'));
+    lines.push('Действие: ' + (lastAction || '—'));
+    lines.push('Ошибка: ' + (bootError || 'нет'));
+    if (bootStack) lines.push('Стек:\n' + bootStack);
+    return lines.join('\n');
   }
   function wireModal() {
     el('modalOk').addEventListener('click', function () {
@@ -330,6 +362,9 @@
       });
     });
     el('syncBtn').addEventListener('click', doSync);
+    el('diagBtn').addEventListener('click', function () {
+      showInfo('Диагностика', diagText());
+    });
     window.addEventListener('online', render);
     window.addEventListener('offline', render);
     document.addEventListener('visibilitychange', function () {
@@ -348,6 +383,7 @@
       L.purgeChecked(state.catalog, Date.now());
       el('repoInput').value = state.settings.repo || '';
       el('tokenInput').value = state.settings.token || '';
+      el('appVer').textContent = 'Версия ' + APP_VERSION;
       render();
       return window.QLStore.save(state);
     }).then(function () {

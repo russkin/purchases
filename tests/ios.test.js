@@ -7,6 +7,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const appSrc = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
+const syncSrc = fs.readFileSync(path.join(__dirname, '..', 'sync.js'), 'utf8');
 
 describe('ios: без системных диалогов', () => {
   it('нет вызовов prompt(', () => {
@@ -23,5 +24,10 @@ describe('ios: без системных диалогов', () => {
   it('есть диагностика нажатий: onerror и lastAction', () => {
     assert.ok(appSrc.includes("addEventListener('error'"), 'нет onerror');
     assert.ok(appSrc.includes('lastAction'), 'нет lastAction');
+  });
+  it('есть стек и кнопка диагностики', () => {
+    assert.ok(appSrc.includes('bootStack'), 'нет bootStack');
+    assert.ok(appSrc.includes('diagBtn'), 'нет diagBtn');
+    assert.ok(syncSrc.includes('normalizeCatalog'), 'нет normalizeCatalog в sync');
   });
 });

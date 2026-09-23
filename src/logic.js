@@ -203,6 +203,34 @@ function activeCount(catalog) {
   return n;
 }
 
+/* --- Нормализация (защита от битых данных старых версий/синка) --- */
+
+function normalizeProduct(p) {
+  if (!p || typeof p !== 'object') p = {};
+  var qty = parseInt(p.qty, 10);
+  if (!(qty > 0)) qty = 0;
+  var checked = !!p.checked;
+  var checkedAt = parseInt(p.checkedAt, 10);
+  if (!(checkedAt > 0)) checkedAt = 0;
+  return { name: normName(p.name), qty: qty, checked: checked, checkedAt: checked ? checkedAt : 0 };
+}
+
+function normalizeCategory(c) {
+  if (!c || typeof c !== 'object') c = {};
+  var src = Array.isArray(c.products) ? c.products : [];
+  var products = [];
+  for (var i = 0; i < MAX_PRODUCTS; i++) products.push(normalizeProduct(src[i]));
+  return { name: normName(c.name), products: products };
+}
+
+/* Приводит любой вход к форме 12×12, сохраняя имеющиеся данные. */
+function normalizeCatalog(catalog) {
+  var src = (catalog && Array.isArray(catalog.categories)) ? catalog.categories : [];
+  var categories = [];
+  for (var i = 0; i < MAX_CATEGORIES; i++) categories.push(normalizeCategory(src[i]));
+  return { categories: categories };
+}
+
 /* --- Решение о слиянии локального и удалённого состояний --- */
 
 function isCatalogEmpty(catalog) {
@@ -252,7 +280,10 @@ var api = {
   listView: listView,
   activeCount: activeCount,
   isCatalogEmpty: isCatalogEmpty,
-  mergeDecision: mergeDecision
+  mergeDecision: mergeDecision,
+  normalizeProduct: normalizeProduct,
+  normalizeCategory: normalizeCategory,
+  normalizeCatalog: normalizeCatalog
 };
 
 if (typeof module !== 'undefined' && module.exports) {

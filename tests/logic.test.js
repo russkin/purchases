@@ -137,6 +137,28 @@ describe('mergeDecision: пустое не затирает непустое', (
     assert.equal(L.mergeDecision(st(L.blankCatalog(), 300), st(L.blankCatalog(), 100)), 'push');
   });
 });
+describe('normalizeCatalog: битые данные', () => {
+  it('null → пустая форма 12x12', () => {
+    const c = L.normalizeCatalog(null);
+    assert.equal(c.categories.length, 12);
+    assert.equal(c.categories[0].products.length, 12);
+  });
+  it('сохраняет данные, чинит мусор', () => {
+    const c = L.normalizeCatalog({ categories: [
+      { name: 'Молочка', products: [{ name: 'Молоко', qty: '2', checked: true, checkedAt: 5 }] }
+    ]});
+    assert.equal(c.categories.length, 12);
+    assert.equal(c.categories[0].name, 'Молочка');
+    assert.equal(c.categories[0].products[0].qty, 2);
+    assert.equal(c.categories[1].name, '');
+    assert.equal(c.categories[0].products[11].name, '');
+  });
+  it('лишние категории отбрасываются', () => {
+    const cats = [];
+    for (let i = 0; i < 20; i++) cats.push({ name: 'C' + i, products: [] });
+    assert.equal(L.normalizeCatalog({ categories: cats }).categories.length, 12);
+  });
+});
 describe('seed-каталог', () => {
   it('seedCatalog: 7 категорий с товарами, количества нулевые', () => {
     const c = L.seedCatalog();
