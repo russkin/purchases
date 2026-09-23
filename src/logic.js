@@ -258,24 +258,34 @@ function cloneProduct(p) {
   return { name: p.name, qty: p.qty, checked: p.checked, checkedAt: p.checkedAt, ts: p.ts || 0 };
 }
 
+function isProductEmpty(p) {
+  return !p.name && !(p.qty > 0) && !p.checked;
+}
+
 function mergeProduct(local, remote) {
   var lt = local.ts || 0;
   var rt = remote.ts || 0;
-  return cloneProduct(rt > lt ? remote : local);
+  if (rt > lt) return cloneProduct(remote);
+  if (lt > rt) return cloneProduct(local);
+  // равные метки: пустое не затирает непустое, иначе локальное
+  if (isProductEmpty(local) && !isProductEmpty(remote)) return cloneProduct(remote);
+  return cloneProduct(local);
 }
 
 function mergeCategory(local, remote) {
   var lt = local.ts || 0;
   var rt = remote.ts || 0;
+  var name;
+  var ts;
+  if (rt > lt) { name = remote.name; ts = rt; }
+  else if (lt > rt) { name = local.name; ts = lt; }
+  else if (!local.name && remote.name) { name = remote.name; ts = rt; }
+  else { name = local.name; ts = lt; }
   var products = [];
   for (var i = 0; i < MAX_PRODUCTS; i++) {
     products.push(mergeProduct(local.products[i], remote.products[i]));
   }
-  return {
-    name: rt > lt ? remote.name : local.name,
-    products: products,
-    ts: Math.max(lt, rt)
-  };
+  return { name: name, products: products, ts: ts };
 }
 
 function mergeCatalogs(localCatalog, remoteCatalog) {
@@ -346,6 +356,7 @@ var api = {
   normalizeCategory: normalizeCategory,
   normalizeCatalog: normalizeCatalog,
   mergeProduct: mergeProduct,
+  isProductEmpty: isProductEmpty,
   mergeCategory: mergeCategory,
   mergeCatalogs: mergeCatalogs,
   catalogsEqual: catalogsEqual

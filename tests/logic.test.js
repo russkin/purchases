@@ -171,6 +171,14 @@ describe('mergeCatalogs: попродуктовое слияние', () => {
     L.incProduct(b, 0, 0, 1000);
     assert.ok(!L.catalogsEqual(a, b));
   });
+  it('равные метки: непустое побеждает пустое', () => {
+    const local = L.blankCatalog();
+    const remote = L.blankCatalog();
+    L.setProductName(remote, 0, 0, 'Y', 0);
+    remote.categories[0].products[0].ts = 0;
+    const m = L.mergeCatalogs(local, remote);
+    assert.equal(m.categories[0].products[0].name, 'Y');
+  });
 });
 describe('mergeDecision: пустое не затирает непустое', () => {
   const st = (catalog, t) => ({ catalog, updatedAt: t });

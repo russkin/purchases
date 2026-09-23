@@ -85,7 +85,8 @@
         return putRemote(repo, token, { updatedAt: state.updatedAt, catalog: state.catalog }, null)
           .then(function () { return { status: 'pushed', state: state }; });
       }
-      var remoteCat = L.normalizeCatalog(remote.state.catalog);
+      var remoteState = (remote.state && typeof remote.state === 'object') ? remote.state : {};
+      var remoteCat = L.normalizeCatalog(remoteState.catalog);
       var mergedCat = L.mergeCatalogs(state.catalog, remoteCat);
       var localChanged = !L.catalogsEqual(mergedCat, state.catalog);
       var remoteChanged = !L.catalogsEqual(mergedCat, remoteCat);
@@ -97,7 +98,7 @@
         return { status: localChanged ? 'pulled' : 'in-sync', state: state, sha: remote.sha };
       }
       var payload = {
-        updatedAt: Math.max(state.updatedAt, remote.state.updatedAt || 0, Date.now()),
+        updatedAt: Math.max(state.updatedAt, remoteState.updatedAt || 0, Date.now()),
         catalog: mergedCat
       };
       return putRemote(repo, token, payload, remote.sha)
