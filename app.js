@@ -3,7 +3,7 @@
 
 (function () {
   var LONGPRESS_MS = 3000;
-  var APP_VERSION = 'v8';
+  var APP_VERSION = 'v9';
   var L = window.QLLogic;
   var state = null;
   var selectedCat = null;
@@ -384,6 +384,7 @@
       el('repoInput').value = state.settings.repo || '';
       el('tokenInput').value = state.settings.token || '';
       el('appVer').textContent = 'Версия ' + APP_VERSION;
+      el('appVerHead').textContent = APP_VERSION;
       render();
       return window.QLStore.save(state);
     }).then(function () {

@@ -37,4 +37,9 @@ describe('ios: без системных диалогов', () => {
       assert.ok(appSrc.includes('L.' + fn + '(state.catalog,'), 'нет вызова ' + fn + '(state.catalog, …)');
     }
   });
+  it('версия видна на экране (шапка)', () => {
+    const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+    assert.ok(html.includes('id="appVerHead"'), 'нет appVerHead в шапке');
+    assert.ok(appSrc.includes("el('appVerHead')"), 'версия не подставляется');
+  });
 });

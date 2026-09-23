@@ -15,6 +15,7 @@
     header { display: flex; align-items: center; gap: 12px; padding: 10px 14px;
       border-bottom: 1px solid #eee; position: sticky; top: 0; background: #fff; z-index: 5; }
     header h1 { font-size: 18px; margin: 0; flex: 1; }
+    #appVerHead { font-size: 12px; color: #888; white-space: nowrap; }
     #menuBtn { font-size: 22px; padding: 6px 12px; }
     button { font-size: 16px; padding: 8px 12px; cursor: pointer; }
     #drawer { display: none; padding: 12px 14px; border-bottom: 1px solid #eee; background: #fafafa; }
@@ -62,6 +63,7 @@
   <header>
     <button id="menuBtn" aria-label="Меню">☰</button>
     <h1>Быстрый список</h1>
+    <span id="appVerHead" title="Версия приложения"></span>
     <span id="netStatus" title="Сеть">●</span>
     <button id="syncBtn" title="Синхронизировать">⇅</button>
     <button id="diagBtn" title="Диагностика">ⓘ</button>
