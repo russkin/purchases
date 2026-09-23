@@ -3,7 +3,7 @@
 
 (function () {
   var LONGPRESS_MS = 3000;
-  var APP_VERSION = 'v15';
+  var APP_VERSION = 'v16';
   var L = window.QLLogic;
   var state = null;
   var selectedCat = null;
@@ -181,7 +181,8 @@
 
   function catButton(c, ci) {
     var b = document.createElement('div');
-    b.className = 'btn' + (c.name ? '' : ' empty');
+    var hasActive = c.products.some(function (p) { return p.qty > 0; });
+    b.className = 'btn' + (c.name ? '' : ' empty') + (hasActive ? ' has-active' : '');
     var label = document.createElement('div');
     label.className = 'btn-label';
     label.textContent = c.name || '+';
