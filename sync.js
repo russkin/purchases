@@ -17,7 +17,14 @@
     var fetchImpl = (root.fetch) ? root.fetch.bind(root) : null;
     root.QLSync = factory(root.QLLogic, fetchImpl);
   }
-}(typeof window !== 'undefined' ? window : {}, function (L, fetchImpl) {
+}(typeof window !== 'undefined' ? window : {}, function (L, fetchImpl, opts) {
+  opts = opts || {};
+  var MAX_RETRIES = (opts.maxRetries != null) ? opts.maxRetries : 5;
+  var BACKOFF_BASE = (opts.baseMs != null) ? opts.baseMs : 800;
+  var BACKOFF_CAP = (opts.capMs != null) ? opts.capMs : 8000;
+  var BACKOFF_JITTER = (opts.jitterMs != null) ? opts.jitterMs : 300;
+  var sleepFn = opts.sleep || sleep;
+
   function apiBase(repo) {
     return 'https://api.github.com/repos/' + repo + '/contents/data/state.json';
   }
@@ -99,7 +106,7 @@
     var repo = state.settings.repo;
     var token = state.settings.token;
     if (!token) return Promise.resolve({ status: 'no-token', state: state });
-    return attempt(state, repo, token, 3).catch(function (e) {
+    return attempt(state, repo, token, MAX_RETRIES).catch(function (e) {
       return { status: 'error', state: state, error: fmtErr(e) };
     });
   }
@@ -111,8 +118,8 @@
   /* Пауза перед ретраем: растёт экспоненциально + случайный джиттер,
    * чтобы два устройства не долбили API в один и тот же момент. */
   function backoffDelay(retryIndex) {
-    var base = Math.min(800 * Math.pow(2, retryIndex), 5000);
-    return base + Math.floor(Math.random() * 300);
+    var base = Math.min(BACKOFF_BASE * Math.pow(2, retryIndex), BACKOFF_CAP);
+    return base + Math.floor(Math.random() * (BACKOFF_JITTER + 1));
   }
 
   /* Одна попытка: скачать → объединить → опубликовать.
@@ -150,7 +157,7 @@
         .catch(function (e) {
           var msg = String(e && e.message || e);
           if (triesLeft > 0 && /github-put (409|422)/.test(msg)) {
-            return sleep(backoffDelay(3 - triesLeft)).then(function () {
+            return sleepFn(backoffDelay(MAX_RETRIES - triesLeft)).then(function () {
               return attempt(state, repo, token, triesLeft - 1);
             });
           }

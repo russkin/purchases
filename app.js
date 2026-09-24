@@ -3,7 +3,7 @@
 
 (function () {
   var LONGPRESS_MS = 3000;
-  var APP_VERSION = 'v28';
+  var APP_VERSION = 'v29';
   var L = window.QLLogic;
   var state = null;
   var selectedCat = null;
@@ -151,9 +151,23 @@
       syncStatus = res.status === 'error' ? ('ошибка синка: ' + res.error) : ('синк: ' + res.status);
       window.QLJournal.push('sync', syncStatus);
       state = res.state;
-      if (res.status === 'error') maybePublishJournal();
+      if (res.status === 'error') {
+        // Сетевые обрывы публиковать бессмысленно — сети нет и для публикации.
+        if (/github-/.test(res.error)) maybePublishJournal();
+        // Исчерпанные конфликты — молча повторить через 30 сек, без спама статусов.
+        if (/github-put (409|422)/.test(res.error)) scheduleConflictRetry();
+      }
       return window.QLStore.save(state);
     }).then(render);
+  }
+
+  var conflictRetryTimer = null;
+  function scheduleConflictRetry() {
+    if (conflictRetryTimer) return;
+    conflictRetryTimer = setTimeout(function () {
+      conflictRetryTimer = null;
+      if (state && state.settings.token && navigator.onLine) doSync();
+    }, 30000);
   }
 
   /* Публикация журнала в logs/ при ошибке синка, не чаще раза в 15 минут

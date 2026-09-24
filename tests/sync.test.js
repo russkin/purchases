@@ -157,7 +157,7 @@ describe('syncNow: конфликты и ошибки', () => {
       if (opts.method === 'PUT') return errResp(409, 'conflict');
       return fileResp('AAA', remote);
     });
-    const api = factory(L, fetch);
+    const api = factory(L, fetch, { baseMs: 1, capMs: 5, jitterMs: 0 });
     const local = stateWith(L.seedCatalog(), 200);
     L.incProduct(local.catalog, 0, 0, 200);
     const res = await api.syncNow(local);
@@ -291,6 +291,40 @@ describe('syncNow: сеть и битые данные', () => {
   });
 });
 
+describe('syncNow: backoff ретраев', () => {
+  it('паузы растут экспоненциально и упираются в cap', async () => {
+    const remote = seedAt(100);
+    const sleeps = [];
+    const fetch = stubFetch(async (url, opts) => {
+      if (opts.method === 'PUT') return errResp(409, 'conflict');
+      return fileResp('AAA', remote);
+    });
+    const api = factory(L, fetch, {
+      baseMs: 100, capMs: 1000, jitterMs: 0,
+      sleep: (ms) => { sleeps.push(ms); return Promise.resolve(); }
+    });
+    const local = stateWith(L.seedCatalog(), 200);
+    L.incProduct(local.catalog, 0, 0, 200);
+    const res = await api.syncNow(local);
+    assert.equal(res.status, 'error');
+    assert.deepEqual(sleeps, [100, 200, 400, 800, 1000]);
+    assert.equal(fetch.calls.filter((c) => c.opts.method === 'PUT').length, 6);
+  });
+
+  it('maxRetries ограничивает число попыток', async () => {
+    const remote = seedAt(100);
+    const fetch = stubFetch(async (url, opts) => {
+      if (opts.method === 'PUT') return errResp(409, 'conflict');
+      return fileResp('AAA', remote);
+    });
+    const api = factory(L, fetch, { baseMs: 1, capMs: 2, jitterMs: 0, maxRetries: 1 });
+    const local = stateWith(L.seedCatalog(), 200);
+    L.incProduct(local.catalog, 0, 0, 200);
+    const res = await api.syncNow(local);
+    assert.equal(res.status, 'error');
+    assert.equal(fetch.calls.filter((c) => c.opts.method === 'PUT').length, 2);
+  });
+});
 describe('publishFile: журнал в репозиторий', () => {
   it('создаёт файл, если его нет (без sha)', async () => {
     let sent = null;

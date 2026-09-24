@@ -48,6 +48,10 @@ describe('ios: без системных диалогов', () => {
     assert.ok(appSrc.includes('QLJournal'), 'нет QLJournal в app');
     assert.ok(syncSrc.includes('publishFile'), 'нет publishFile в sync');
   });
+  it('сетевые ошибки не публикуются, 409 тихо ретраится позже', () => {
+    assert.ok(appSrc.includes('scheduleConflictRetry'), 'нет scheduleConflictRetry');
+    assert.ok(appSrc.includes('/github-/'), 'журнал публикуется и при сетевых ошибках');
+  });
   it('очистка кэша с гарантированной перезагрузкой и автообновлением', () => {
     assert.ok(appSrc.includes('clearCacheNow'), 'нет clearCacheNow');
     assert.ok(appSrc.includes('setTimeout(done, 4000)'), 'нет страховки перезагрузки');
