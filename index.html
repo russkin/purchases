@@ -20,7 +20,9 @@
     #syncLight.blink { animation: synblink 1s infinite; }
     @keyframes synblink { 50% { opacity: .25; } }
     #syncLight { display: inline-block; position: relative; width: 14px; height: 14px;
-      border-radius: 3px; background: #bbb; flex: none; overflow: hidden; }
+      border-radius: 3px; background: #bbb; flex: none; overflow: hidden; cursor: pointer;
+      color: #fff; font-weight: bold; font-size: 11px; line-height: 14px; text-align: center; }
+    #syncLight.alert::before, #syncLight.alert::after { display: none; }
     #syncLight::before { content: ''; position: absolute; left: 0; right: 0; top: 5px;
       height: 4px; background: rgba(255,255,255,.75); }
     #syncLight::after { content: ''; position: absolute; top: 0; bottom: 0; left: 5px;

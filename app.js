@@ -3,7 +3,7 @@
 
 (function () {
   var LONGPRESS_MS = 3000;
-  var APP_VERSION = 'v36';
+  var APP_VERSION = 'v37';
   var L = window.QLLogic;
   var state = null;
   var selectedCat = null;
@@ -423,20 +423,26 @@
     net.style.color = navigator.onLine ? '#2e9e44' : '#bbb';
     net.title = navigator.onLine ? 'Есть сеть' : 'Нет сети';
     /* Светофор синхронизации: зелёный — всё отправлено, жёлтый (мигает) —
-     * идёт отправка, красный — ошибка, серый — синк выключен (нет ключа). */
+     * идёт отправка, красный — ошибка, серый — синк выключен (нет ключа).
+     * При конфликте записи (409/422) посылка превращается в красный «!»,
+     * тап по нему — принудительный синк, как пункт в шестерёнке. */
     var light = el('syncLight');
     var color = '#bbb';
-    var title = (state && state.settings.token) ? 'Синк ещё не запускался' : 'Синк выключен (нет ключа)';
+    var title = (state && state.settings.token) ? 'Синк ещё не запускался. Нажми — синхронизировать.' : 'Синк выключен (нет ключа)';
     var blink = false;
+    var alert = false;
     if (syncStatus === 'синхронизация…') {
       color = '#e6a700'; title = 'Идёт синхронизация…'; blink = true;
     } else if (syncStatus.indexOf('ошибка') === 0) {
-      color = '#d32f2f'; title = syncStatus;
+      color = '#d32f2f'; title = syncStatus + '. Нажми — попробовать снова.';
+      if (/github-put (409|422)/.test(syncStatus)) alert = true;
     } else if (syncStatus.indexOf('синк:') === 0) {
-      color = '#2e9e44'; title = syncStatus;
+      color = '#2e9e44'; title = syncStatus + '. Нажми — синхронизировать.';
     }
     light.style.background = color;
     light.title = title;
+    light.textContent = alert ? '!' : '';
+    light.classList.toggle('alert', alert);
     light.classList.toggle('blink', blink);
   }
 
@@ -490,6 +496,9 @@
     });
     el('syncNowBtn').addEventListener('click', function () {
       el('gearMenu').classList.remove('open');
+      doSync();
+    });
+    el('syncLight').addEventListener('click', function () {
       doSync();
     });
     el('gearBtn').addEventListener('click', function (e) {

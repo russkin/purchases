@@ -79,6 +79,8 @@ describe('ios: без системных диалогов', () => {
     assert.ok(appSrc.includes('#d32f2f'), 'нет красного цвета');
     assert.ok(appSrc.includes('⇅'), 'нет значка сети ⇅');
     assert.ok(html.includes('syncLight::after'), 'посылка без скотча');
+    assert.ok(appSrc.includes("el('syncLight').addEventListener('click'"), 'тап по светофору не запускает синк');
+    assert.ok(appSrc.includes("classList.toggle('alert'"), 'нет тревоги ! при 409');
   });
   it('синк объединяет попродуктово', () => {
     assert.ok(syncSrc.includes('mergeCatalogs'), 'нет mergeCatalogs в sync');
