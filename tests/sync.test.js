@@ -472,3 +472,20 @@ describe('syncNow: флаги, очистки, идемпотентность', 
     assert.equal(puts, 1);
   });
 });
+
+describe('устойчивость к плохой сети', () => {
+  it('висящий GET обрывается таймаутом — error, а не вечный синк', async () => {
+    const fetch = stubFetch(() => new Promise(() => {}));
+    const api = factory(L, fetch, { timeoutMs: 5 });
+    const res = await api.syncNow(stateWith(L.seedCatalog(), 100));
+    assert.equal(res.status, 'error');
+    assert.match(res.error, /timeout/);
+  });
+
+  it('GET идёт мимо HTTP-кэша', async () => {
+    const fetch = stubFetch(async () => ({ status: 404, ok: false, json: async () => ({}) }));
+    const api = factory(L, fetch);
+    await api.syncNow(stateWith(L.blankCatalog(), 100));
+    assert.equal(fetch.calls[0].opts.cache, 'no-store');
+  });
+});

@@ -23,7 +23,33 @@
   var BACKOFF_BASE = (opts.baseMs != null) ? opts.baseMs : 800;
   var BACKOFF_CAP = (opts.capMs != null) ? opts.capMs : 8000;
   var BACKOFF_JITTER = (opts.jitterMs != null) ? opts.jitterMs : 300;
+  var FETCH_TIMEOUT = (opts.timeoutMs != null) ? opts.timeoutMs : 20000;
   var sleepFn = opts.sleep || sleep;
+
+  /* Запрос с таймаутом: на рваной мобильной сети fetch может висеть минутами,
+   * и весь синк выглядит «зависшим» (повторные нажатия копятся в очереди).
+   * Старые WebView без AbortController — поэтому гонка через Promise.race. */
+  function timedFetch(url, fopts) {
+    return new Promise(function (resolve, reject) {
+      var done = false;
+      var timer = setTimeout(function () {
+        if (done) return;
+        done = true;
+        reject(new Error('timeout'));
+      }, FETCH_TIMEOUT);
+      fetchImpl(url, fopts).then(function (r) {
+        if (done) return;
+        done = true;
+        clearTimeout(timer);
+        resolve(r);
+      }, function (e) {
+        if (done) return;
+        done = true;
+        clearTimeout(timer);
+        reject(e);
+      });
+    });
+  }
 
   function apiBase(repo) {
     return 'https://api.github.com/repos/' + repo + '/contents/data/state.json';
@@ -37,7 +63,9 @@
   }
 
   function getRemote(repo, token) {
-    return fetchImpl(apiBase(repo) + '?ref=main', { headers: headers(token) }).then(function (r) {
+    /* cache: no-store — API GitHub кэшируется браузером до минуты,
+     * без этого планшет видит старое и рапортует in-sync. */
+    return timedFetch(apiBase(repo) + '?ref=main', { headers: headers(token), cache: 'no-store' }).then(function (r) {
       if (r.status === 404) return null;
       if (!r.ok) throw new Error('github-get ' + r.status);
       return r.json();
@@ -55,7 +83,7 @@
     var content = btoa(unescape(encodeURIComponent(JSON.stringify(state))));
     var payload = { message: 'Sync quicklist', content: content, branch: 'main' };
     if (sha) payload.sha = sha;
-    return fetchImpl(apiBase(repo), {
+    return timedFetch(apiBase(repo), {
       method: 'PUT',
       headers: Object.assign({ 'Content-Type': 'application/json' }, headers(token)),
       body: JSON.stringify(payload)
