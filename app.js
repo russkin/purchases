@@ -3,7 +3,7 @@
 
 (function () {
   var LONGPRESS_MS = 3000;
-  var APP_VERSION = 'v33';
+  var APP_VERSION = 'v34';
   var L = window.QLLogic;
   var state = null;
   var selectedCat = null;
@@ -435,7 +435,7 @@
     } else if (syncStatus.indexOf('синк:') === 0) {
       color = '#2e9e44'; title = syncStatus;
     }
-    light.style.color = color;
+    light.style.background = color;
     light.title = title;
     light.classList.toggle('blink', blink);
   }
