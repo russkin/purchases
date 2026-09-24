@@ -3,7 +3,7 @@
 
 (function () {
   var LONGPRESS_MS = 3000;
-  var APP_VERSION = 'v41';
+  var APP_VERSION = 'v42';
   var L = window.QLLogic;
   var state = null;
   var selectedCat = null;
@@ -442,18 +442,17 @@
     net.textContent = '⇅';
     net.style.color = navigator.onLine ? '#2e9e44' : '#bbb';
     net.title = navigator.onLine ? 'Есть сеть' : 'Нет сети';
-    /* Тип сети (4G/3G/2G) отдаёт не каждый браузер (на iPhone — нет),
-     * поэтому подпись показываем только когда она известна. */
-    var netType = '';
+    /* Замеренная скорость (Мбит/с) вместо типа сети: effectiveType врёт
+     * (антенна 4G, а тянет на 3G), а downlink показывает как есть.
+     * Отдаёт не каждый браузер (на iPhone — нет), тогда подпись пустая. */
+    var netSpeed = '';
     try {
       var conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-      if (conn && conn.effectiveType) {
-        netType = String(conn.effectiveType).toLowerCase();
-        if (netType === 'slow-2g') netType = '2g';
-        netType = netType.toUpperCase();
+      if (conn && conn.downlink > 0) {
+        netSpeed = (Math.round(conn.downlink * 10) / 10) + ' Мбит/с';
       }
-    } catch (e) { netType = ''; }
-    el('netType').textContent = (navigator.onLine && netType) ? netType : '';
+    } catch (e) { netSpeed = ''; }
+    el('netType').textContent = (navigator.onLine && netSpeed) ? netSpeed : '';
     /* Светофор синхронизации: зелёный — всё отправлено, жёлтый (мигает) —
      * идёт отправка, красный — ошибка, серый — синк выключен (нет ключа).
      * При конфликте записи (409/422) посылка превращается в красный «!»,
