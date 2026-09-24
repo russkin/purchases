@@ -3,7 +3,7 @@
 
 (function () {
   var LONGPRESS_MS = 3000;
-  var APP_VERSION = 'v42';
+  var APP_VERSION = 'v43';
   var L = window.QLLogic;
   var state = null;
   var selectedCat = null;
@@ -442,14 +442,13 @@
     net.textContent = '⇅';
     net.style.color = navigator.onLine ? '#2e9e44' : '#bbb';
     net.title = navigator.onLine ? 'Есть сеть' : 'Нет сети';
-    /* Замеренная скорость (Мбит/с) вместо типа сети: effectiveType врёт
-     * (антенна 4G, а тянет на 3G), а downlink показывает как есть.
-     * Отдаёт не каждый браузер (на iPhone — нет), тогда подпись пустая. */
+    /* Замеренная скорость в мегабайтах: браузер отдаёт мегабиты (downlink),
+     * делим на 8. Отдаёт не каждый браузер (на iPhone — нет), тогда пусто. */
     var netSpeed = '';
     try {
       var conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
       if (conn && conn.downlink > 0) {
-        netSpeed = (Math.round(conn.downlink * 10) / 10) + ' Мбит/с';
+        netSpeed = String(Math.round(conn.downlink / 8 * 100) / 100).replace('.', ',') + ' МБ/с';
       }
     } catch (e) { netSpeed = ''; }
     el('netType').textContent = (navigator.onLine && netSpeed) ? netSpeed : '';

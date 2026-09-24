@@ -90,6 +90,7 @@ describe('ios: без системных диалогов', () => {
     assert.ok(appSrc.includes('⇅'), 'нет значка сети ⇅');
     assert.ok(html.includes('id="netType"'), 'нет подписи типа сети');
     assert.ok(appSrc.includes('downlink'), 'скорость сети не читается');
+    assert.ok(appSrc.includes('МБ/с'), 'скорость не в мегабайтах');
     assert.ok(html.includes('syncLight::after'), 'посылка без скотча');
     assert.ok(appSrc.includes("el('syncLight').addEventListener('click'"), 'тап по светофору не запускает синк');
     assert.ok(appSrc.includes("classList.toggle('alert'"), 'нет тревоги ! при 409');
