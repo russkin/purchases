@@ -65,30 +65,6 @@
     });
   }
 
-  /* Свой PHP-сервер (server/sync.php): тот же смысл, другие URL.
-   * Тексты ошибок оставлены как у GitHub, чтобы работали общие ретраи. */
-  function customGet(server, token) {
-    return fetchImpl(server, { headers: headers(token) }).then(function (r) {
-      if (r.status === 404) return null;
-      if (!r.ok) throw new Error('srv-get ' + r.status);
-      return r.json();
-    }).then(function (body) {
-      if (!body) return null;
-      return { sha: body.rev, state: body.state };
-    });
-  }
-
-  function customPut(server, token, state, rev) {
-    return fetchImpl(server, {
-      method: 'PUT',
-      headers: Object.assign({ 'Content-Type': 'application/json' }, headers(token)),
-      body: JSON.stringify({ rev: rev || null, state: state })
-    }).then(function (r) {
-      if (r.status === 409 || r.status === 422) throw new Error('srv-put ' + r.status);
-      if (!r.ok) throw new Error('srv-put ' + r.status);
-      return r.json();
-    });
-  }
   function fmtErr(e) {
     if (!e) return 'unknown';
     var name = e.name ? e.name + ': ' : '';
@@ -129,9 +105,8 @@
   function syncNow(state) {
     var repo = state.settings.repo;
     var token = state.settings.token;
-    var server = (state.settings.server || '').replace(/\/+$/, '');
     if (!token) return Promise.resolve({ status: 'no-token', state: state });
-    return attempt(state, repo, token, server, MAX_RETRIES).catch(function (e) {
+    return attempt(state, repo, token, MAX_RETRIES).catch(function (e) {
       return { status: 'error', state: state, error: fmtErr(e) };
     });
   }
@@ -148,21 +123,14 @@
   }
 
   /* Одна попытка: скачать → объединить → опубликовать.
-   * При 409/422 (кто-то сохранился между GET и PUT) пауза, перечитать и объединить заново. */
-  var CONFLICT_RE = /(github-put|srv-put) (409|422)/;
-  function attempt(state, repo, token, server, triesLeft) {
-    var get = server
-      ? function () { return customGet(server, token); }
-      : function () { return getRemote(repo, token); };
-    var put = server
-      ? function (payload, sha) { return customPut(server, token, payload, sha); }
-      : function (payload, sha) { return putRemote(repo, token, payload, sha); };
-    return get().then(function (remote) {
+   * При 409/422 (кто-то запушил между GET и PUT) пауза, перечитать и объединить заново. */
+  function attempt(state, repo, token, triesLeft) {
+    return getRemote(repo, token).then(function (remote) {
       if (!remote) {
         if (L.isCatalogEmpty(state.catalog)) {
           return { status: 'in-sync', state: state };
         }
-        return put({ updatedAt: state.updatedAt, catalog: state.catalog }, null)
+        return putRemote(repo, token, { updatedAt: state.updatedAt, catalog: state.catalog }, null)
           .then(function () { return { status: 'pushed', state: state }; });
       }
       var remoteState = (remote.state && typeof remote.state === 'object') ? remote.state : {};
@@ -181,16 +149,16 @@
         updatedAt: Math.max(state.updatedAt, remoteState.updatedAt || 0, Date.now()),
         catalog: mergedCat
       };
-      return put(payload, remote.sha)
+      return putRemote(repo, token, payload, remote.sha)
         .then(function () {
           state.updatedAt = payload.updatedAt;
           return { status: localChanged ? 'merged' : 'pushed', state: state };
         })
         .catch(function (e) {
           var msg = String(e && e.message || e);
-          if (triesLeft > 0 && CONFLICT_RE.test(msg)) {
+          if (triesLeft > 0 && /github-put (409|422)/.test(msg)) {
             return sleepFn(backoffDelay(MAX_RETRIES - triesLeft)).then(function () {
-              return attempt(state, repo, token, server, triesLeft - 1);
+              return attempt(state, repo, token, triesLeft - 1);
             });
           }
           throw e;
@@ -198,5 +166,5 @@
     });
   }
 
-  return { syncNow: syncNow, getRemote: getRemote, putRemote: putRemote, fmtErr: fmtErr, publishFile: publishFile, customGet: customGet, customPut: customPut };
+  return { syncNow: syncNow, getRemote: getRemote, putRemote: putRemote, fmtErr: fmtErr, publishFile: publishFile };
 }));

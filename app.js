@@ -3,7 +3,7 @@
 
 (function () {
   var LONGPRESS_MS = 3000;
-  var APP_VERSION = 'v45';
+  var APP_VERSION = 'v46';
   var L = window.QLLogic;
   var state = null;
   var selectedCat = null;
@@ -99,7 +99,6 @@
     lines.push('Активных: ' + L.activeCount(state.catalog));
     lines.push('updatedAt: ' + state.updatedAt);
     lines.push('Синк: ' + (syncStatus || (state.settings.token ? '—' : 'выключен (нет ключа)')));
-    if (state.settings.server) lines.push('Сервер: ' + state.settings.server);
     lines.push('Действие: ' + (lastAction || '—'));
     lines.push('Ошибка: ' + (bootError || 'нет'));
     if (bootStack) lines.push('Стек:\n' + bootStack);
@@ -169,7 +168,7 @@
         // Сетевые обрывы публиковать бессмысленно — сети нет и для публикации.
         if (/github-/.test(res.error)) maybePublishJournal();
         // Исчерпанные конфликты — молча повторить через 30 сек, без спама статусов.
-        if (/(github-put|srv-put) (409|422)/.test(res.error)) scheduleConflictRetry();
+        if (/github-put (409|422)/.test(res.error)) scheduleConflictRetry();
         // Любая ошибка — ещё 5 быстрых повторов через 2 сек.
         scheduleErrorRetry();
       } else {
@@ -215,7 +214,6 @@
   }
   function maybePublishJournal() {
     try {
-      if (state.settings.server) return; // свой сервер: журналы некуда публиковать
       var now = Date.now();
       if (now - lastJournalPublish < 15 * 60 * 1000) return;
       lastJournalPublish = now;
@@ -467,7 +465,7 @@
       color = '#e6a700'; title = 'Идёт синхронизация…'; blink = true;
     } else if (syncStatus.indexOf('ошибка') === 0) {
       color = '#d32f2f'; title = syncStatus + '. Нажми — попробовать снова.';
-      if (/(github-put|srv-put) (409|422)/.test(syncStatus)) alert = true;
+      if (/github-put (409|422)/.test(syncStatus)) alert = true;
     } else if (syncStatus.indexOf('синк:') === 0) {
       color = '#2e9e44'; title = syncStatus + '. Нажми — синхронизировать.';
     }
@@ -516,7 +514,6 @@
     el('saveSettings').addEventListener('click', function () {
       state.settings.repo = el('repoInput').value.trim() || 'russkin/purchases';
       state.settings.token = el('tokenInput').value.trim();
-      state.settings.server = el('serverInput').value.trim().replace(/\/+$/, '');
       el('gearMenu').classList.remove('open');
       save(); render();
     });
@@ -584,7 +581,6 @@
       L.purgeChecked(state.catalog, Date.now());
       el('repoInput').value = state.settings.repo || '';
       el('tokenInput').value = state.settings.token || '';
-      el('serverInput').value = state.settings.server || '';
       el('appVer').textContent = 'Версия ' + APP_VERSION;
       el('appVerHead').textContent = APP_VERSION;
       render();
