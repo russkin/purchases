@@ -20,8 +20,10 @@
     #syncLight.blink { animation: synblink 1s infinite; }
     @keyframes synblink { 50% { opacity: .25; } }
     #syncLight { display: inline-block; position: relative; width: 14px; height: 14px;
-      border-radius: 3px; background: #bbb; flex: none; }
-    #syncLight::after { content: ''; position: absolute; left: 5px; top: 0; bottom: 0;
+      border-radius: 3px; background: #bbb; flex: none; overflow: hidden; }
+    #syncLight::before { content: ''; position: absolute; left: 0; right: 0; top: 5px;
+      height: 4px; background: rgba(255,255,255,.75); }
+    #syncLight::after { content: ''; position: absolute; top: 0; bottom: 0; left: 5px;
       width: 4px; background: rgba(255,255,255,.75); }
     button { font-size: 16px; padding: 8px 12px; cursor: pointer; }
     main { padding: 12px 14px 40px; }
@@ -81,14 +83,14 @@
     <button id="menuBtn" aria-label="Переключить режим">Д</button>
     <h1>Быстрый список</h1>
     <span id="appVerHead" title="Версия приложения"></span>
-    <span id="netStatus" title="Сеть">●</span>
+    <span id="netStatus" title="Сеть">⇅</span>
     <span id="syncLight" title="Синхронизация"></span>
-    <button id="syncBtn" title="Синхронизировать">⇅</button>
     <button id="gearBtn" title="Меню" aria-label="Меню">⚙</button>
   </header>
 
   <div id="gearMenu">
     <button id="diagBtn">ⓘ Информация для диагностики</button>
+    <button id="syncNowBtn">⇅ Синхронизировать</button>
     <button id="clearList">Очистить список</button>
     <button id="clearCache">Очистить кэш</button>
     <button id="clearAll">Сбросить все названия</button>

@@ -3,7 +3,7 @@
 
 (function () {
   var LONGPRESS_MS = 3000;
-  var APP_VERSION = 'v35';
+  var APP_VERSION = 'v36';
   var L = window.QLLogic;
   var state = null;
   var selectedCat = null;
@@ -419,7 +419,7 @@
     if (bootError) parts.push(bootError);
     el('status').textContent = parts.join(' · ');
     var net = el('netStatus');
-    net.textContent = '⇄';
+    net.textContent = '⇅';
     net.style.color = navigator.onLine ? '#2e9e44' : '#bbb';
     net.title = navigator.onLine ? 'Есть сеть' : 'Нет сети';
     /* Светофор синхронизации: зелёный — всё отправлено, жёлтый (мигает) —
@@ -488,7 +488,10 @@
         clearCacheNow();
       });
     });
-    el('syncBtn').addEventListener('click', doSync);
+    el('syncNowBtn').addEventListener('click', function () {
+      el('gearMenu').classList.remove('open');
+      doSync();
+    });
     el('gearBtn').addEventListener('click', function (e) {
       e.stopPropagation();
       el('gearMenu').classList.toggle('open');
@@ -525,7 +528,7 @@
       return window.QLStore.save(state);
     }).then(function () {
       setupAutoUpdate();
-      /* Автоподтягивание общего списка при открытии (кнопка ⇅ больше не обязательна). */
+      /* Автоподтягивание общего списка при открытии (ручной пункт в ⚙ не обязателен). */
       if (state.settings.token && navigator.onLine) doSync();
     });
   }
