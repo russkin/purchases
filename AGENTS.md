@@ -4,7 +4,7 @@
 Репозиторий: `git@github.com:russkin/purchases.git`, ветка `main`.
 Прод: https://russkin.github.io/purchases/ (GitHub Pages, source = GitHub Actions).
 Тестовая платформа: планшет HUAWEI MediaPad T3 10 (Android 7), телефоны Android 10+, iPhone 7 (Chrome).
-Текущая версия: v51 (сентябрь 2026). Тестов: 94 (`logic` + `ios` + `sync` + `sync-devices` + `journal`).
+Текущая версия: v52 (сентябрь 2026). Тестов: 94 (`logic` + `ios` + `sync` + `sync-devices` + `journal`).
 
 ## Регламент публикации (обязательный после КАЖДОГО коммита)
 
@@ -121,3 +121,6 @@ Docs-only правки версию НЕ bump'ят.
 14. Chrome видит пару «текст + type=password» (repo + token) как форму входа и предлагает
     сохранить токен; `autocomplete="off"`/`"new-password"` он игнорирует. Лечится `readonly`
     на поле токена до первого фокуса (снимается в `wire()`), есть регресс-тест.
+15. Сетка каталога 20×20 (v52, было 12×12): старая версия обрезает слоты за 12-м при
+    нормализации и может затереть их на сервере. Новые слоты занимать только когда ВСЕ
+    устройства обновились (версию видно в шапке `#appVerHead`).

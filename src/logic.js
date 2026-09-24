@@ -6,8 +6,8 @@
  */
 'use strict';
 
-var MAX_CATEGORIES = 12;
-var MAX_PRODUCTS = 12;
+var MAX_CATEGORIES = 20;
+var MAX_PRODUCTS = 20;
 
 function blankProduct() {
   return { name: '', qty: 0, checked: false, checkedAt: 0, ts: 0 };
@@ -241,7 +241,7 @@ function normalizeCategory(c) {
   return { name: normName(c.name), products: products, ts: ts };
 }
 
-/* Приводит любой вход к форме 12×12, сохраняя имеющиеся данные. */
+/* Приводит любой вход к форме 20×20, сохраняя имеющиеся данные. */
 function normalizeCatalog(catalog) {
   var src = (catalog && Array.isArray(catalog.categories)) ? catalog.categories : [];
   var categories = [];

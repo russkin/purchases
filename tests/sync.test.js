@@ -228,7 +228,7 @@ describe('syncNow: сеть и битые данные', () => {
     const local = stateWith(L.blankCatalog(), 100);
     const res = await api.syncNow(local);
     assert.equal(res.status, 'pulled');
-    assert.equal(res.state.catalog.categories.length, 12);
+    assert.equal(res.state.catalog.categories.length, 20);
     assert.equal(res.state.catalog.categories[0].name, 'X');
     assert.equal(res.state.catalog.categories[0].products[0].qty, 2);
   });
