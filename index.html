@@ -17,6 +17,9 @@
     header h1 { font-size: 18px; margin: 0; flex: 1; }
     #appVerHead { font-size: 12px; color: #888; white-space: nowrap; }
     #menuBtn { font-size: 22px; padding: 6px 12px; font-weight: bold; }
+    .netwrap { display: inline-flex; flex-direction: column; align-items: center; line-height: 1; }
+    #netStatus { font-size: 24px; }
+    #netType { font-size: 9px; color: #888; min-height: 10px; }
     #syncLight.blink { animation: synblink 1s infinite; }
     @keyframes synblink { 50% { opacity: .25; } }
     #syncLight { display: inline-block; position: relative; width: 14px; height: 14px;
@@ -87,7 +90,7 @@
     <button id="menuBtn" aria-label="Переключить режим">Д</button>
     <h1>Быстрый список</h1>
     <span id="appVerHead" title="Версия приложения"></span>
-    <span id="netStatus" title="Сеть">⇅</span>
+    <span class="netwrap"><span id="netStatus" title="Сеть">⇅</span><span id="netType"></span></span>
     <span id="syncLight" title="Синхронизация"></span>
     <button id="gearBtn" title="Меню" aria-label="Меню">⚙</button>
   </header>

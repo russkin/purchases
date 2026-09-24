@@ -3,7 +3,7 @@
 
 (function () {
   var LONGPRESS_MS = 3000;
-  var APP_VERSION = 'v39';
+  var APP_VERSION = 'v40';
   var L = window.QLLogic;
   var state = null;
   var selectedCat = null;
@@ -442,6 +442,18 @@
     net.textContent = '⇅';
     net.style.color = navigator.onLine ? '#2e9e44' : '#bbb';
     net.title = navigator.onLine ? 'Есть сеть' : 'Нет сети';
+    /* Тип сети (4G/3G/2G) отдаёт не каждый браузер (на iPhone — нет),
+     * поэтому подпись показываем только когда она известна. */
+    var netType = '';
+    try {
+      var conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+      if (conn && conn.effectiveType) {
+        netType = String(conn.effectiveType).toLowerCase();
+        if (netType === 'slow-2g') netType = '2g';
+        netType = netType.toUpperCase();
+      }
+    } catch (e) { netType = ''; }
+    el('netType').textContent = (navigator.onLine && netType) ? netType : '';
     /* Светофор синхронизации: зелёный — всё отправлено, жёлтый (мигает) —
      * идёт отправка, красный — ошибка, серый — синк выключен (нет ключа).
      * При конфликте записи (409/422) посылка превращается в красный «!»,
@@ -537,6 +549,10 @@
       render();
       if (state && state.settings.token) doSync();
     });
+    try {
+      var connEv = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+      if (connEv && connEv.addEventListener) connEv.addEventListener('change', render);
+    } catch (e) {}
     window.addEventListener('offline', render);
     document.addEventListener('visibilitychange', function () {
       if (!document.hidden && state) {
