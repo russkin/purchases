@@ -30,12 +30,17 @@ clients.claim, приложение само перезагружается пр
 - `app.js` — UI: сетки 12 кнопок, список, долгое нажатие 3 сек, модальные диалоги.
 - `store.js` — IndexedDB + fallback localStorage (`quicklist-v1`), `sanitize` нормализует.
 - `sync.js` — синк через GitHub Contents API, UMD (браузер + `require` в тестах).
+- `journal.js` — локальный кольцевой журнал синка (100 записей, ВНЕ синкаемого состояния)
+  + `publishFile` в `sync.js` для публикации журнала в `logs/`.
 - `src/logic.js` — чистая логика без DOM (UMD), вся мутабельность каталога здесь.
 - `sw.js`, `manifest.webmanifest`, `icon.svg` — PWA.
 - `data/state.json` — ОБЩИЙ файл синка в репозитории: `{ updatedAt, catalog }`. Создаётся
   устройствами, в git локально НЕ хранится (игнорируй при коммитах кода).
-- `.github/workflows/pages.yml` — job `test` (все 4 файла), сборка `_site/`, deploy.
-  `paths-ignore: data/**` — синк-коммиты деплой не триггерят.
+- `logs/sync-ГГГГ-ММ-ДД-<device>.json` — журналы диагностики с устройств (1 файл на
+  устройство в сутки, перезаписывается). Публикуются приложением при ошибке синка,
+  не чаще раза в 15 минут. При диагностике ПЕРВЫМ ДЕЛОМ смотреть свежие файлы в `logs/`.
+- `.github/workflows/pages.yml` — job `test` (все 5 файлов), сборка `_site/`, deploy.
+  `paths-ignore: data/**, logs/**` — синк- и лог-коммиты деплой не триггерят.
 - `tests/` — `logic.test.js`, `ios.test.js` (строковые регрессы app.js), `sync.test.js`,
   `sync-devices.test.js` (фейковый GitHub с sha-семантикой).
 - `docs/USER_GUIDE.md` (+ `.html` для офлайна), `README.md`.

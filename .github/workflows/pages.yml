@@ -3,7 +3,7 @@ name: Deploy PWA to GitHub Pages
 on:
   push:
     branches: [main]
-    paths-ignore: ['data/**']
+    paths-ignore: ['data/**', 'logs/**']
   workflow_dispatch:
 
 permissions:
@@ -23,7 +23,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-      - run: node --test tests/logic.test.js tests/ios.test.js tests/sync.test.js tests/sync-devices.test.js
+      - run: node --test tests/logic.test.js tests/ios.test.js tests/sync.test.js tests/sync-devices.test.js tests/journal.test.js
 
   build:
     needs: test
@@ -33,7 +33,7 @@ jobs:
       - name: Assemble site
         run: |
           mkdir -p _site/docs _site/src
-          cp index.html app.js store.js sync.js manifest.webmanifest sw.js icon.svg README.md _site/
+          cp index.html app.js store.js sync.js journal.js manifest.webmanifest sw.js icon.svg README.md _site/
           cp src/logic.js _site/src/logic.js
           cp docs/USER_GUIDE.html _site/docs/USER_GUIDE.html
       - uses: actions/configure-pages@v5

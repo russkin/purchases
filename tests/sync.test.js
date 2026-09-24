@@ -291,6 +291,53 @@ describe('syncNow: сеть и битые данные', () => {
   });
 });
 
+describe('publishFile: журнал в репозиторий', () => {
+  it('создаёт файл, если его нет (без sha)', async () => {
+    let sent = null;
+    const fetch = stubFetch(async (url, opts) => {
+      if (opts.method === 'PUT') {
+        sent = JSON.parse(opts.body);
+        return { status: 201, ok: true, json: async () => ({}) };
+      }
+      return { status: 404, ok: false, json: async () => ({}) };
+    });
+    const api = factory(L, fetch);
+    assert.equal(await api.publishFile('r/x', 'TOK', 'logs/a.json', { a: 1 }), 'logged');
+    assert.ok(!sent.sha);
+    assert.equal(sent.message, 'Sync journal');
+  });
+
+  it('перезаписывает с sha', async () => {
+    let sent = null;
+    const fetch = stubFetch(async (url, opts) => {
+      if (opts.method === 'PUT') {
+        sent = JSON.parse(opts.body);
+        return { status: 200, ok: true, json: async () => ({}) };
+      }
+      return { status: 200, ok: true, json: async () => ({ sha: 'OLD', content: 'e30=' }) };
+    });
+    const api = factory(L, fetch);
+    assert.equal(await api.publishFile('r/x', 'TOK', 'logs/a.json', { a: 2 }), 'logged');
+    assert.equal(sent.sha, 'OLD');
+  });
+
+  it('ошибка чтения — log-error без исключения', async () => {
+    const fetch = stubFetch(async () => errResp(500, 'boom'));
+    const api = factory(L, fetch);
+    const st = await api.publishFile('r/x', 'TOK', 'logs/a.json', {});
+    assert.match(st, /^log-error: /);
+  });
+
+  it('ошибка записи — log-error без исключения', async () => {
+    const fetch = stubFetch(async (url, opts) => {
+      if (opts.method === 'PUT') return errResp(403, 'denied');
+      return { status: 200, ok: true, json: async () => ({ sha: 'OLD', content: 'e30=' }) };
+    });
+    const api = factory(L, fetch);
+    const st = await api.publishFile('r/x', 'TOK', 'logs/a.json', {});
+    assert.match(st, /github-log-put 403/);
+  });
+});
 describe('syncNow: флаги, очистки, идемпотентность', () => {
   it('переименование категории: свежее побеждает', async () => {
     const remote = seedAt(200);

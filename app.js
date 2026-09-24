@@ -3,7 +3,7 @@
 
 (function () {
   var LONGPRESS_MS = 3000;
-  var APP_VERSION = 'v27';
+  var APP_VERSION = 'v28';
   var L = window.QLLogic;
   var state = null;
   var selectedCat = null;
@@ -91,6 +91,7 @@
   function diagText() {
     var lines = [];
     lines.push('Версия: ' + APP_VERSION);
+    lines.push('Устройство: ' + window.QLJournal.deviceId());
     if (!state) return 'Состояние не загружено.';
     lines.push('Режим: ' + state.settings.mode);
     lines.push('Категорий: ' + state.catalog.categories.length);
@@ -101,6 +102,13 @@
     lines.push('Действие: ' + (lastAction || '—'));
     lines.push('Ошибка: ' + (bootError || 'нет'));
     if (bootStack) lines.push('Стек:\n' + bootStack);
+    var journal = window.QLJournal.list().slice(-12);
+    if (journal.length) {
+      lines.push('Журнал:');
+      journal.forEach(function (e) {
+        lines.push('  ' + new Date(e.t).toLocaleString() + ' [' + e.type + '] ' + e.text);
+      });
+    }
     return lines.join('\n');
   }
   function wireModal() {
@@ -141,9 +149,37 @@
     renderStatus();
     window.QLSync.syncNow(state).then(function (res) {
       syncStatus = res.status === 'error' ? ('ошибка синка: ' + res.error) : ('синк: ' + res.status);
+      window.QLJournal.push('sync', syncStatus);
       state = res.state;
+      if (res.status === 'error') maybePublishJournal();
       return window.QLStore.save(state);
     }).then(render);
+  }
+
+  /* Публикация журнала в logs/ при ошибке синка, не чаще раза в 15 минут
+   * (иначе заспамим репозиторий коммитами). Имя: logs/sync-ГГГГ-ММ-ДД-<device>.json. */
+  var lastJournalPublish = 0;
+  function logFileName() {
+    var d = new Date();
+    function p(n) { return (n < 10 ? '0' : '') + n; }
+    return 'logs/sync-' + d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) +
+      '-' + window.QLJournal.deviceId() + '.json';
+  }
+  function maybePublishJournal() {
+    try {
+      var now = Date.now();
+      if (now - lastJournalPublish < 15 * 60 * 1000) return;
+      lastJournalPublish = now;
+      var body = {
+        device: window.QLJournal.deviceId(),
+        version: APP_VERSION,
+        at: new Date(now).toISOString(),
+        journal: window.QLJournal.list().slice(-50)
+      };
+      window.QLSync.publishFile(state.settings.repo, state.settings.token, logFileName(), body)
+        .then(function (st) { window.QLJournal.push('log', String(st)); renderStatus(); })
+        .catch(function () {});
+    } catch (e) {}
   }
 
   /* Очистка кэша с видимым прогрессом и гарантированной перезагрузкой:

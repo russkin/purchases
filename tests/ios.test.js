@@ -42,6 +42,12 @@ describe('ios: без системных диалогов', () => {
     assert.ok(html.includes('id="appVerHead"'), 'нет appVerHead в шапке');
     assert.ok(appSrc.includes("el('appVerHead')"), 'версия не подставляется');
   });
+  it('журнал подключён: QLJournal, публикация, скрипт', () => {
+    const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+    assert.ok(html.includes('journal.js'), 'нет journal.js в index.html');
+    assert.ok(appSrc.includes('QLJournal'), 'нет QLJournal в app');
+    assert.ok(syncSrc.includes('publishFile'), 'нет publishFile в sync');
+  });
   it('очистка кэша с гарантированной перезагрузкой и автообновлением', () => {
     assert.ok(appSrc.includes('clearCacheNow'), 'нет clearCacheNow');
     assert.ok(appSrc.includes('setTimeout(done, 4000)'), 'нет страховки перезагрузки');

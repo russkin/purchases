@@ -65,6 +65,36 @@
     return (name + msg).slice(0, 300);
   }
 
+  /* Публикация произвольного JSON-файла (журналы диагностики):
+   * создать или перезаписать по sha. Возвращает текст статуса, не бросает. */
+  function publishFile(repo, token, path, obj) {
+    var url = 'https://api.github.com/repos/' + repo + '/contents/' + path;
+    return fetchImpl(url + '?ref=main', { headers: headers(token) }).then(function (r) {
+      if (r.status === 404) return null;
+      if (!r.ok) throw new Error('github-log-get ' + r.status);
+      return r.json();
+    }).then(function (body) {
+      var payload = {
+        message: 'Sync journal',
+        content: btoa(unescape(encodeURIComponent(JSON.stringify(obj)))),
+        branch: 'main'
+      };
+      if (body && body.sha) payload.sha = body.sha;
+      return fetchImpl(url, {
+        method: 'PUT',
+        headers: Object.assign({ 'Content-Type': 'application/json' }, headers(token)),
+        body: JSON.stringify(payload)
+      });
+    }).then(function (r) {
+      if (!r.ok) throw new Error('github-log-put ' + r.status);
+      return r.json();
+    }).then(function () {
+      return 'logged';
+    }).catch(function (e) {
+      return 'log-error: ' + fmtErr(e);
+    });
+  }
+
   function syncNow(state) {
     var repo = state.settings.repo;
     var token = state.settings.token;
@@ -129,5 +159,5 @@
     });
   }
 
-  return { syncNow: syncNow, getRemote: getRemote, putRemote: putRemote, fmtErr: fmtErr };
+  return { syncNow: syncNow, getRemote: getRemote, putRemote: putRemote, fmtErr: fmtErr, publishFile: publishFile };
 }));

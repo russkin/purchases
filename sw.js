@@ -1,10 +1,11 @@
-const CACHE = 'quicklist-v27';
+const CACHE = 'quicklist-v28';
 const ASSETS = [
   './',
   './index.html',
   './app.js',
   './store.js',
   './sync.js',
+  './journal.js',
   './src/logic.js',
   './manifest.webmanifest',
   './icon.svg',
