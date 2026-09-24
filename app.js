@@ -3,7 +3,7 @@
 
 (function () {
   var LONGPRESS_MS = 3000;
-  var APP_VERSION = 'v32';
+  var APP_VERSION = 'v33';
   var L = window.QLLogic;
   var state = null;
   var selectedCat = null;
@@ -418,7 +418,26 @@
     if (syncStatus) parts.push(syncStatus);
     if (bootError) parts.push(bootError);
     el('status').textContent = parts.join(' · ');
-    el('netStatus').textContent = navigator.onLine ? '●' : '○';
+    var net = el('netStatus');
+    net.textContent = navigator.onLine ? '●' : '○';
+    net.style.color = navigator.onLine ? '#2e9e44' : '#bbb';
+    net.title = navigator.onLine ? 'Есть сеть' : 'Нет сети';
+    /* Светофор синхронизации: зелёный — всё отправлено, жёлтый (мигает) —
+     * идёт отправка, красный — ошибка, серый — синк выключен (нет ключа). */
+    var light = el('syncLight');
+    var color = '#bbb';
+    var title = (state && state.settings.token) ? 'Синк ещё не запускался' : 'Синк выключен (нет ключа)';
+    var blink = false;
+    if (syncStatus === 'синхронизация…') {
+      color = '#e6a700'; title = 'Идёт синхронизация…'; blink = true;
+    } else if (syncStatus.indexOf('ошибка') === 0) {
+      color = '#d32f2f'; title = syncStatus;
+    } else if (syncStatus.indexOf('синк:') === 0) {
+      color = '#2e9e44'; title = syncStatus;
+    }
+    light.style.color = color;
+    light.title = title;
+    light.classList.toggle('blink', blink);
   }
 
   function render() {

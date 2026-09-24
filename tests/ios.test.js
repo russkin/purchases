@@ -71,6 +71,13 @@ describe('ios: без системных диалогов', () => {
     assert.ok(appSrc.includes('syncInFlight'), 'нет флага syncInFlight');
     assert.ok(appSrc.includes('syncAgain'), 'нет очереди syncAgain');
   });
+  it('светофор синка и цвет точки сети', () => {
+    const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+    assert.ok(html.includes('id="syncLight"'), 'нет syncLight в шапке');
+    assert.ok(appSrc.includes("el('syncLight')"), 'светофор не обновляется');
+    assert.ok(appSrc.includes('#2e9e44'), 'нет зелёного цвета');
+    assert.ok(appSrc.includes('#d32f2f'), 'нет красного цвета');
+  });
   it('синк объединяет попродуктово', () => {
     assert.ok(syncSrc.includes('mergeCatalogs'), 'нет mergeCatalogs в sync');
     assert.ok(syncSrc.includes('bad response'), 'нет проверки тела ответа API');
