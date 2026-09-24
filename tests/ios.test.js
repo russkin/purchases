@@ -136,4 +136,9 @@ describe('ios: без системных диалогов', () => {
     assert.ok(appSrc.includes('На экран'), 'нет подсказки ручной установки для iPhone');
     assert.ok(appSrc.includes('display-mode: standalone'), 'кнопка не прячется в установленном приложении');
   });
+  it('токен не принимают за пароль: new-password, Chrome молчит', () => {
+    const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+    assert.ok(html.includes('id="tokenInput"'), 'нет tokenInput');
+    assert.ok(/id="tokenInput"[^>]*autocomplete="new-password"/.test(html), 'у токена нет new-password');
+  });
 });
