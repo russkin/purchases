@@ -3,7 +3,7 @@
 
 (function () {
   var LONGPRESS_MS = 3000;
-  var APP_VERSION = 'v31';
+  var APP_VERSION = 'v32';
   var L = window.QLLogic;
   var state = null;
   var selectedCat = null;
@@ -143,8 +143,21 @@
     syncTimer = setTimeout(doSync, 2000);
   }
 
+  /* Параллельные синки на медленной сети затирают друг другу sha
+   * (каждый PUT прилетает с протухшим sha → вечные 409).
+   * Поэтому летит только один, повторная просьба ждёт своей очереди. */
+  var syncInFlight = false;
+  var syncAgain = false;
+  function finishSync() {
+    syncInFlight = false;
+    render();
+    if (syncAgain) { syncAgain = false; doSync(); }
+  }
+
   function doSync() {
     if (!state.settings.token) { syncStatus = ''; renderStatus(); return; }
+    if (syncInFlight) { syncAgain = true; return; }
+    syncInFlight = true;
     syncStatus = 'синхронизация…';
     renderStatus();
     window.QLSync.syncNow(state).then(function (res) {
@@ -158,7 +171,7 @@
         if (/github-put (409|422)/.test(res.error)) scheduleConflictRetry();
       }
       return window.QLStore.save(state);
-    }).then(render);
+    }).then(finishSync, finishSync);
   }
 
   var conflictRetryTimer = null;

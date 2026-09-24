@@ -67,6 +67,10 @@ describe('ios: без системных диалогов', () => {
     assert.ok(/github-put \(409\|422\)/.test(syncSrc), 'нет ретрая 409/422');
     assert.ok(syncSrc.includes('backoffDelay'), 'нет backoff перед ретраем');
   });
+  it('синки не идут параллельно (иначе вечные 409 на медленной сети)', () => {
+    assert.ok(appSrc.includes('syncInFlight'), 'нет флага syncInFlight');
+    assert.ok(appSrc.includes('syncAgain'), 'нет очереди syncAgain');
+  });
   it('синк объединяет попродуктово', () => {
     assert.ok(syncSrc.includes('mergeCatalogs'), 'нет mergeCatalogs в sync');
     assert.ok(syncSrc.includes('bad response'), 'нет проверки тела ответа API');
