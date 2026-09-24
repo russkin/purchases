@@ -3,7 +3,7 @@
 
 (function () {
   var LONGPRESS_MS = 3000;
-  var APP_VERSION = 'v34';
+  var APP_VERSION = 'v35';
   var L = window.QLLogic;
   var state = null;
   var selectedCat = null;
@@ -419,7 +419,7 @@
     if (bootError) parts.push(bootError);
     el('status').textContent = parts.join(' · ');
     var net = el('netStatus');
-    net.textContent = navigator.onLine ? '●' : '○';
+    net.textContent = '⇄';
     net.style.color = navigator.onLine ? '#2e9e44' : '#bbb';
     net.title = navigator.onLine ? 'Есть сеть' : 'Нет сети';
     /* Светофор синхронизации: зелёный — всё отправлено, жёлтый (мигает) —
