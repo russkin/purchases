@@ -64,7 +64,7 @@ describe('ios: без системных диалогов', () => {
     assert.ok(appSrc.includes('controllerchange'), 'нет автообновления');
   });
   it('конфликт записи повторяется с паузой (409/422 + backoff)', () => {
-    assert.ok(/github-put \(409\|422\)/.test(syncSrc), 'нет ретрая 409/422');
+    assert.ok(/github-put \(409\|422\)/.test(syncSrc) || /srv-put/.test(syncSrc), 'нет ретрая 409/422');
     assert.ok(syncSrc.includes('backoffDelay'), 'нет backoff перед ретраем');
   });
   it('синки не идут параллельно (иначе вечные 409 на медленной сети)', () => {

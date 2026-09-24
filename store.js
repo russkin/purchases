@@ -92,7 +92,7 @@
   function defaultState() {
     return {
       catalog: window.QLLogic.seedCatalog(),
-      settings: { mode: 'add', repo: 'russkin/purchases', token: '' },
+      settings: { mode: 'add', repo: 'russkin/purchases', token: '', server: '' },
       updatedAt: Date.now()
     };
   }
@@ -104,7 +104,8 @@
     } else {
       state.catalog = window.QLLogic.normalizeCatalog(state.catalog);
     }
-    if (!state.settings) state.settings = { mode: 'add', repo: 'russkin/purchases', token: '' };
+    if (!state.settings) state.settings = { mode: 'add', repo: 'russkin/purchases', token: '', server: '' };
+    if (typeof state.settings.server !== 'string') state.settings.server = '';
     if (!state.updatedAt) state.updatedAt = Date.now();
     return state;
   }

@@ -1,0 +1,2 @@
+# Довести заголовок Authorization до PHP (нужно на части CGI/FastCGI-хостингов).
+CGIPassAuth On
