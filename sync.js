@@ -74,8 +74,19 @@
     });
   }
 
+  function sleep(ms) {
+    return new Promise(function (resolve) { setTimeout(resolve, ms); });
+  }
+
+  /* Пауза перед ретраем: растёт экспоненциально + случайный джиттер,
+   * чтобы два устройства не долбили API в один и тот же момент. */
+  function backoffDelay(retryIndex) {
+    var base = Math.min(800 * Math.pow(2, retryIndex), 5000);
+    return base + Math.floor(Math.random() * 300);
+  }
+
   /* Одна попытка: скачать → объединить → опубликовать.
-   * При 409/422 (кто-то запушил между GET и PUT) перечитать и объединить заново. */
+   * При 409/422 (кто-то запушил между GET и PUT) пауза, перечитать и объединить заново. */
   function attempt(state, repo, token, triesLeft) {
     return getRemote(repo, token).then(function (remote) {
       if (!remote) {
@@ -109,7 +120,9 @@
         .catch(function (e) {
           var msg = String(e && e.message || e);
           if (triesLeft > 0 && /github-put (409|422)/.test(msg)) {
-            return attempt(state, repo, token, triesLeft - 1);
+            return sleep(backoffDelay(3 - triesLeft)).then(function () {
+              return attempt(state, repo, token, triesLeft - 1);
+            });
           }
           throw e;
         });

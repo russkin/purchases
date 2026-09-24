@@ -47,8 +47,9 @@ describe('ios: без системных диалогов', () => {
     assert.ok(appSrc.includes('setTimeout(done, 4000)'), 'нет страховки перезагрузки');
     assert.ok(appSrc.includes('controllerchange'), 'нет автообновления');
   });
-  it('конфликт записи повторяется (409/422)', () => {
+  it('конфликт записи повторяется с паузой (409/422 + backoff)', () => {
     assert.ok(/github-put \(409\|422\)/.test(syncSrc), 'нет ретрая 409/422');
+    assert.ok(syncSrc.includes('backoffDelay'), 'нет backoff перед ретраем');
   });
   it('синк объединяет попродуктово', () => {
     assert.ok(syncSrc.includes('mergeCatalogs'), 'нет mergeCatalogs в sync');
