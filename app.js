@@ -3,7 +3,7 @@
 
 (function () {
   var LONGPRESS_MS = 3000;
-  var APP_VERSION = 'v30';
+  var APP_VERSION = 'v31';
   var L = window.QLLogic;
   var state = null;
   var selectedCat = null;
@@ -98,7 +98,7 @@
     lines.push('Выбрана: ' + selectedCat);
     lines.push('Активных: ' + L.activeCount(state.catalog));
     lines.push('updatedAt: ' + state.updatedAt);
-    lines.push('Синк: ' + (syncStatus || '—'));
+    lines.push('Синк: ' + (syncStatus || (state.settings.token ? '—' : 'выключен (нет ключа)')));
     lines.push('Действие: ' + (lastAction || '—'));
     lines.push('Ошибка: ' + (bootError || 'нет'));
     if (bootStack) lines.push('Стек:\n' + bootStack);
