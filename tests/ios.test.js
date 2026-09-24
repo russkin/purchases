@@ -76,6 +76,11 @@ describe('ios: без системных диалогов', () => {
     assert.ok(appSrc.includes('errRetryCount'), 'нет счётчика повторов');
     assert.ok(/2000/.test(appSrc), 'нет паузы 2 сек');
   });
+  it('возврат на вкладку синкает: visibilitychange + focus + pageshow', () => {
+    assert.ok(appSrc.includes('onTabActive'), 'нет onTabActive');
+    assert.ok(appSrc.includes("'pageshow'"), 'нет pageshow');
+    assert.ok(appSrc.includes("'focus'"), 'нет focus');
+  });
   it('светофор синка и цвет точки сети', () => {
     const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
     assert.ok(html.includes('id="syncLight"'), 'нет syncLight в шапке');

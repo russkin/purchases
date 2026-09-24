@@ -3,7 +3,7 @@
 
 (function () {
   var LONGPRESS_MS = 3000;
-  var APP_VERSION = 'v40';
+  var APP_VERSION = 'v41';
   var L = window.QLLogic;
   var state = null;
   var selectedCat = null;
@@ -554,13 +554,26 @@
       if (connEv && connEv.addEventListener) connEv.addEventListener('change', render);
     } catch (e) {}
     window.addEventListener('offline', render);
-    document.addEventListener('visibilitychange', function () {
-      if (!document.hidden && state) {
-        L.purgeChecked(state.catalog, Date.now());
-        render();
-        if (state.settings.token && navigator.onLine) doSync();
+    /* Возврат на вкладку: одного visibilitychange мало — при восстановлении
+     * из кэша назад/вперёд он может не сработать, поэтому слушаем ещё
+     * focus и pageshow. Троттлинг 15 сек, чтобы фокус не долбил API. */
+    var lastTabSync = 0;
+    window.QLApp = window.QLApp || {};
+    window.QLApp.onTabActive = function () {
+      if (!state || document.hidden) return;
+      L.purgeChecked(state.catalog, Date.now());
+      render();
+      var now = Date.now();
+      if (state.settings.token && navigator.onLine && now - lastTabSync > 15000) {
+        lastTabSync = now;
+        doSync();
       }
+    };
+    document.addEventListener('visibilitychange', function () {
+      if (!document.hidden) window.QLApp.onTabActive();
     });
+    window.addEventListener('focus', window.QLApp.onTabActive);
+    window.addEventListener('pageshow', window.QLApp.onTabActive);
   }
 
   function init() {
