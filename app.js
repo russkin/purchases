@@ -3,7 +3,7 @@
 
 (function () {
   var LONGPRESS_MS = 3000;
-  var APP_VERSION = 'v38';
+  var APP_VERSION = 'v39';
   var L = window.QLLogic;
   var state = null;
   var selectedCat = null;
@@ -169,9 +169,29 @@
         if (/github-/.test(res.error)) maybePublishJournal();
         // Исчерпанные конфликты — молча повторить через 30 сек, без спама статусов.
         if (/github-put (409|422)/.test(res.error)) scheduleConflictRetry();
+        // Любая ошибка — ещё 5 быстрых повторов через 2 сек.
+        scheduleErrorRetry();
+      } else {
+        errRetryCount = 0;
+        if (errRetryTimer) { clearTimeout(errRetryTimer); errRetryTimer = null; }
       }
       return window.QLStore.save(state);
     }).then(finishSync, finishSync);
+  }
+
+  /* Быстрые повторы при любой ошибке синка: через 2 сек, до 5 раз подряд.
+   * Счётчик сбрасывается при первом же успехе. */
+  var errRetryCount = 0;
+  var errRetryTimer = null;
+  function scheduleErrorRetry() {
+    if (!navigator.onLine) return;
+    if (errRetryCount >= 5) { errRetryCount = 0; return; }
+    errRetryCount += 1;
+    if (errRetryTimer) clearTimeout(errRetryTimer);
+    errRetryTimer = setTimeout(function () {
+      errRetryTimer = null;
+      if (state && state.settings.token && navigator.onLine) doSync();
+    }, 2000);
   }
 
   var conflictRetryTimer = null;
@@ -513,7 +533,10 @@
       var m = el('gearMenu');
       if (m.classList.contains('open') && !m.contains(e.target)) m.classList.remove('open');
     });
-    window.addEventListener('online', render);
+    window.addEventListener('online', function () {
+      render();
+      if (state && state.settings.token) doSync();
+    });
     window.addEventListener('offline', render);
     document.addEventListener('visibilitychange', function () {
       if (!document.hidden && state) {

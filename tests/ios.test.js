@@ -71,6 +71,11 @@ describe('ios: без системных диалогов', () => {
     assert.ok(appSrc.includes('syncInFlight'), 'нет флага syncInFlight');
     assert.ok(appSrc.includes('syncAgain'), 'нет очереди syncAgain');
   });
+  it('ошибка синка — ещё 5 повторов через 2 сек', () => {
+    assert.ok(appSrc.includes('scheduleErrorRetry'), 'нет scheduleErrorRetry');
+    assert.ok(appSrc.includes('errRetryCount'), 'нет счётчика повторов');
+    assert.ok(/2000/.test(appSrc), 'нет паузы 2 сек');
+  });
   it('светофор синка и цвет точки сети', () => {
     const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
     assert.ok(html.includes('id="syncLight"'), 'нет syncLight в шапке');
