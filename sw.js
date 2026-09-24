@@ -1,4 +1,4 @@
-const CACHE = 'quicklist-v47';
+const CACHE = 'quicklist-v48';
 const ASSETS = [
   './',
   './index.html',
@@ -9,6 +9,8 @@ const ASSETS = [
   './src/logic.js',
   './manifest.webmanifest',
   './icon.svg',
+  './icon-192.png',
+  './icon-512.png',
   './docs/USER_GUIDE.html'
 ];
 

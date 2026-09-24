@@ -33,7 +33,7 @@ jobs:
       - name: Assemble site
         run: |
           mkdir -p _site/docs _site/src
-          cp index.html app.js store.js sync.js journal.js manifest.webmanifest sw.js icon.svg README.md _site/
+          cp index.html app.js store.js sync.js journal.js manifest.webmanifest sw.js icon.svg icon-192.png icon-512.png README.md _site/
           cp src/logic.js _site/src/logic.js
           cp docs/USER_GUIDE.html _site/docs/USER_GUIDE.html
       - uses: actions/configure-pages@v5

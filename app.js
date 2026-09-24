@@ -3,7 +3,7 @@
 
 (function () {
   var LONGPRESS_MS = 3000;
-  var APP_VERSION = 'v47';
+  var APP_VERSION = 'v48';
   var L = window.QLLogic;
   var state = null;
   var selectedCat = null;
@@ -201,6 +201,20 @@
       conflictRetryTimer = null;
       if (state && state.settings.token && navigator.onLine) doSync();
     }, 30000);
+  }
+
+  /* Фоновый опрос общего файла: открытый планшет сам подтягивает чужие
+   * правки раз в 60 сек — только если вкладка видима, есть сеть и задан токен.
+   * Параллельный синк невозможен: в doSync single-flight (syncInFlight). */
+  var POLL_MS = 60000;
+  var pollTimer = null;
+  function setupPolling() {
+    if (pollTimer) return;
+    pollTimer = setInterval(function () {
+      if (document.hidden) return;
+      if (!state || !state.settings.token || !navigator.onLine) return;
+      doSync();
+    }, POLL_MS);
   }
 
   /* Публикация журнала в logs/ при ошибке синка, не чаще раза в 15 минут
@@ -587,6 +601,7 @@
       return window.QLStore.save(state);
     }).then(function () {
       setupAutoUpdate();
+      setupPolling();
       /* Автоподтягивание общего списка при открытии (ручной пункт в ⚙ не обязателен). */
       if (state.settings.token && navigator.onLine) doSync();
     });

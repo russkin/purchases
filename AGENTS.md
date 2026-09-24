@@ -4,11 +4,11 @@
 Репозиторий: `git@github.com:russkin/purchases.git`, ветка `main`.
 Прод: https://russkin.github.io/purchases/ (GitHub Pages, source = GitHub Actions).
 Тестовая платформа: планшет HUAWEI MediaPad T3 10 (Android 7), телефоны Android 10+, iPhone 7 (Chrome).
-Текущая версия: v47 (сентябрь 2026). Тестов: 81 (`logic` + `ios` + `sync` + `sync-devices`).
+Текущая версия: v48 (сентябрь 2026). Тестов: 91 (`logic` + `ios` + `sync` + `sync-devices` + `journal`).
 
 ## Регламент публикации (обязательный после КАЖДОГО коммита)
 
-1. `node --test tests/logic.test.js tests/ios.test.js tests/sync.test.js tests/sync-devices.test.js` — всё зелёное.
+1. `node --test tests/logic.test.js tests/ios.test.js tests/sync.test.js tests/sync-devices.test.js tests/journal.test.js` — всё зелёное.
 2. `git commit`, затем push. Прямой push без токена не взлетит (origin — SSH):
    `git push "https://x-access-token:${GITHUB_TOKEN}@github.com/russkin/purchases.git" main:main`
    Токен брать из локального `.env` (`GITHUB_TOKEN`), в выводе затирать через
@@ -39,7 +39,8 @@ Docs-only правки версию НЕ bump'ят.
 - `journal.js` — локальный кольцевой журнал (ВНЕ синкаемого состояния, виден в диагностике)
   + `publishFile` в `sync.js` для публикации журнала в `logs/`.
 - `src/logic.js` — чистая логика без DOM (UMD), вся мутабельность каталога здесь.
-- `sw.js`, `manifest.webmanifest`, `icon.svg` — PWA. Install берёт файлы строго из сети
+- `sw.js`, `manifest.webmanifest`, `icon.svg` + `icon-192/512.png` (PNG обязательны —
+  старый Chrome на Android 7 один SVG не признаёт и ставит битый ярлык). Install берёт файлы строго из сети
   (`cache: 'reload'`, иначе Pages с `max-age=600` кладёт старье).
 - `data/state.json` — ОБЩИЙ файл синка в репозитории: `{ updatedAt, catalog }`. Создаётся
   устройствами, в git локально НЕ хранится (игнорируй при коммитах кода).
@@ -47,11 +48,11 @@ Docs-only правки версию НЕ bump'ят.
   устройство в сутки, перезаписывается). Публикуются приложением при ошибке синка,
   не чаще раза в 15 минут; сетевые обрывы (без `github-` в тексте) не публикуются.
   При диагностике ПЕРВЫМ ДЕЛОМ смотреть свежие файлы в `logs/`.
-- `.github/workflows/pages.yml` — job `test` (все 4 файла), сборка `_site/` (явный список
+- `.github/workflows/pages.yml` — job `test` (все 5 файлов), сборка `_site/` (явный список
   файлов, без `.env`/`.git`), deploy. `paths-ignore: data/**, logs/**` — синк- и
   лог-коммиты деплой не триггерят.
 - `tests/` — `logic.test.js`, `ios.test.js` (строковые регрессы app.js/index.html),
-  `sync.test.js`, `sync-devices.test.js` (фейковый GitHub с sha-семантикой).
+  `sync.test.js`, `sync-devices.test.js` (фейковый GitHub с sha-семантикой), `journal.test.js`.
 - `docs/USER_GUIDE.md` (+ `.html` для офлайна, ссылка из ⚙), `README.md`.
 
 ## Протокол синка (важно, тут были все баги)
@@ -67,6 +68,7 @@ Docs-only правки версию НЕ bump'ят.
   409 на медленной сети). Любая ошибка → ещё 5 повторов через 2 сек (счётчик сбрасывается
   успехом, без сети не тратится). Исчерпанный 409/422 — тихий повтор через 30 сек.
 - Триггеры: debounce 2 сек после каждого изменения (все мутации идут через `save()`),
+  фоновый опрос раз в 60 сек (`setupPolling`, только если вкладка видима + сеть + токен),
   при открытии, при возврате на вкладку (`visibilitychange` + `focus` + `pageshow`,
   троттлинг 15 сек), при появлении сети, пункт ⚙ → «Синхронизировать», тап по посылке.
 - Без токена синк молча ничего не делает (это НОРМА для одного устройства);

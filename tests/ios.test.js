@@ -101,4 +101,28 @@ describe('ios: без системных диалогов', () => {
     assert.ok(syncSrc.includes('bad response'), 'нет проверки тела ответа API');
     assert.ok(syncSrc.includes('fmtErr'), 'нет форматирования ошибок');
   });
+  it('версии app.js и sw.js меняются вместе', () => {
+    const swSrc = fs.readFileSync(path.join(__dirname, '..', 'sw.js'), 'utf8');
+    const m1 = appSrc.match(/APP_VERSION = 'v(\d+)'/);
+    const m2 = swSrc.match(/quicklist-v(\d+)/);
+    assert.ok(m1 && m2, 'метка версии не найдена');
+    assert.equal(m1[1], m2[1], 'версии app.js и sw.js разъехались');
+  });
+  it('открытый планшет подтягивает чужие правки: фоновый опрос раз в 60 сек', () => {
+    assert.ok(appSrc.includes('setupPolling'), 'нет setupPolling');
+    assert.ok(appSrc.includes('setInterval'), 'нет setInterval');
+    assert.ok(/POLL_MS = 60000/.test(appSrc), 'нет интервала 60 сек');
+    assert.ok(/document\.hidden/.test(appSrc), 'опрос без проверки видимости вкладки');
+  });
+  it('PWA ставится на старом Android: PNG-иконки в манифесте, кэше SW и сборке', () => {
+    const manifest = fs.readFileSync(path.join(__dirname, '..', 'manifest.webmanifest'), 'utf8');
+    assert.ok(manifest.includes('icon-192.png'), 'нет 192 в манифесте');
+    assert.ok(manifest.includes('icon-512.png'), 'нет 512 в манифесте');
+    const swSrc = fs.readFileSync(path.join(__dirname, '..', 'sw.js'), 'utf8');
+    assert.ok(swSrc.includes('icon-192.png') && swSrc.includes('icon-512.png'), 'иконок нет в кэше SW');
+    const yml = fs.readFileSync(path.join(__dirname, '..', '.github/workflows/pages.yml'), 'utf8');
+    assert.ok(yml.includes('icon-192.png') && yml.includes('icon-512.png'), 'иконок нет в сборке Pages');
+    assert.ok(fs.existsSync(path.join(__dirname, '..', 'icon-192.png')), 'нет файла icon-192.png');
+    assert.ok(fs.existsSync(path.join(__dirname, '..', 'icon-512.png')), 'нет файла icon-512.png');
+  });
 });
