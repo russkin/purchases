@@ -4,7 +4,7 @@
 Репозиторий: `git@github.com:russkin/purchases.git`, ветка `main`.
 Прод: https://russkin.github.io/purchases/ (GitHub Pages, source = GitHub Actions).
 Тестовая платформа: планшет HUAWEI MediaPad T3 10 (Android 7), телефоны Android 10+, iPhone 7 (Chrome).
-Текущая версия: v50 (сентябрь 2026). Тестов: 93 (`logic` + `ios` + `sync` + `sync-devices` + `journal`).
+Текущая версия: v51 (сентябрь 2026). Тестов: 94 (`logic` + `ios` + `sync` + `sync-devices` + `journal`).
 
 ## Регламент публикации (обязательный после КАЖДОГО коммита)
 
@@ -118,3 +118,6 @@ Docs-only правки версию НЕ bump'ят.
     Комитить только явным списком файлов. Rebase может упереться в untracked-файлы
     из удалённого репозитория — локальные файлы двигать в /tmp, НЕ удалять, потом вернуть.
 13. Пакеты для хостинга собирать только в /tmp и удалять сразу; в репозиторий не класть.
+14. Chrome видит пару «текст + type=password» (repo + token) как форму входа и предлагает
+    сохранить токен; `autocomplete="off"`/`"new-password"` он игнорирует. Лечится `readonly`
+    на поле токена до первого фокуса (снимается в `wire()`), есть регресс-тест.

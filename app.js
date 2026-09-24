@@ -3,7 +3,7 @@
 
 (function () {
   var LONGPRESS_MS = 3000;
-  var APP_VERSION = 'v50';
+  var APP_VERSION = 'v51';
   var L = window.QLLogic;
   var state = null;
   var selectedCat = null;
@@ -573,6 +573,13 @@
       state.settings.token = el('tokenInput').value.trim();
       el('gearMenu').classList.remove('open');
       save(); render();
+    });
+    /* Chrome считает пару «текст + пароль» формой входа и предлагает сохранить
+     * токен (autocomplete он игнорирует). readonly до первого фокуса ломает
+     * эвристику: такие поля менеджер паролей не трогает. Программной
+     * подстановке сохранённого токена readonly не мешает. */
+    el('tokenInput').addEventListener('focus', function () {
+      el('tokenInput').removeAttribute('readonly');
     });
     el('clearCache').addEventListener('click', function () {
       el('gearMenu').classList.remove('open');
