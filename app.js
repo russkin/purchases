@@ -3,7 +3,7 @@
 
 (function () {
   var LONGPRESS_MS = 3000;
-  var APP_VERSION = 'v48';
+  var APP_VERSION = 'v49';
   var L = window.QLLogic;
   var state = null;
   var selectedCat = null;
@@ -123,6 +123,47 @@
     });
     el('modalClear').addEventListener('click', function () {
       closeModal('');
+    });
+  }
+
+  /* Установка PWA из шестерёнки: Chrome отдаёт beforeinstallprompt — тогда
+   * показываем системный диалог; иначе (iPhone, старый WebView) — подсказку,
+   * как добавить вручную. В уже установленном приложении пункт прячем. */
+  var deferredInstall = null;
+  function renderInstallBtn() {
+    var b = el('installBtn');
+    if (!b) return;
+    try {
+      if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) {
+        b.style.display = 'none';
+        return;
+      }
+    } catch (e) {}
+    b.style.display = '';
+  }
+  function wireInstall() {
+    window.addEventListener('beforeinstallprompt', function (e) {
+      e.preventDefault();
+      deferredInstall = e;
+      renderInstallBtn();
+    });
+    window.addEventListener('appinstalled', function () {
+      deferredInstall = null;
+      renderInstallBtn();
+    });
+    el('installBtn').addEventListener('click', function () {
+      el('gearMenu').classList.remove('open');
+      if (deferredInstall) {
+        deferredInstall.prompt();
+        deferredInstall.userChoice.then(function () {
+          deferredInstall = null;
+        }).catch(function () {});
+        return;
+      }
+      showInfo('Установка приложения',
+        'Android Chrome: ⋮ → «Установить приложение».\n' +
+        'iPhone (Safari): Поделиться → «На экран „Домой“».\n' +
+        'После установки открывать с иконки «Список».');
     });
   }
 
@@ -497,11 +538,13 @@
     el('menuBtn').textContent = isAdd ? 'Д' : 'С';
     el('menuBtn').title = isAdd ? 'Режим добавления (нажми — список)' : 'Режим списка (нажми — добавление)';
     if (isAdd) renderAdd(); else renderList();
+    renderInstallBtn();
     renderStatus();
   }
 
   function wire() {
     wireModal();
+    wireInstall();
     /* Кнопка-переключатель режимов: показывает текущий (Д/С), нажатие меняет. */
     el('menuBtn').addEventListener('click', function () {
       state.settings.mode = state.settings.mode === 'add' ? 'list' : 'add';

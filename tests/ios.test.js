@@ -11,7 +11,9 @@ const syncSrc = fs.readFileSync(path.join(__dirname, '..', 'sync.js'), 'utf8');
 
 describe('ios: без системных диалогов', () => {
   it('нет вызовов prompt(', () => {
-    assert.ok(!/(^|[^A-Za-z_$])prompt\s*\(/.test(appSrc), 'найден prompt(');
+    /* Точку исключаем: BeforeInstallPromptEvent.prompt() — не системный диалог,
+     * на iOS событие просто не приходит, там показывается своя подсказка. */
+    assert.ok(!/(^|[^A-Za-z_$.])prompt\s*\(/.test(appSrc), 'найден prompt(');
   });
   it('нет вызовов confirm(', () => {
     assert.ok(!/(^|[^A-Za-z_$])confirm\s*\(/.test(appSrc), 'найден confirm(');
@@ -124,5 +126,14 @@ describe('ios: без системных диалогов', () => {
     assert.ok(yml.includes('icon-192.png') && yml.includes('icon-512.png'), 'иконок нет в сборке Pages');
     assert.ok(fs.existsSync(path.join(__dirname, '..', 'icon-192.png')), 'нет файла icon-192.png');
     assert.ok(fs.existsSync(path.join(__dirname, '..', 'icon-512.png')), 'нет файла icon-512.png');
+  });
+  it('установка PWA из шестерёнки: кнопка + beforeinstallprompt с подсказкой', () => {
+    const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+    assert.ok(html.includes('id="installBtn"'), 'нет installBtn в меню');
+    assert.ok(appSrc.includes('beforeinstallprompt'), 'нет перехвата beforeinstallprompt');
+    assert.ok(appSrc.includes('deferredInstall'), 'нет отложенного промпта');
+    assert.ok(appSrc.includes('.prompt()'), 'промпт не вызывается');
+    assert.ok(appSrc.includes('На экран'), 'нет подсказки ручной установки для iPhone');
+    assert.ok(appSrc.includes('display-mode: standalone'), 'кнопка не прячется в установленном приложении');
   });
 });
