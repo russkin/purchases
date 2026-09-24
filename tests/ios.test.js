@@ -81,6 +81,7 @@ describe('ios: без системных диалогов', () => {
     assert.ok(html.includes('syncLight::after'), 'посылка без скотча');
     assert.ok(appSrc.includes("el('syncLight').addEventListener('click'"), 'тап по светофору не запускает синк');
     assert.ok(appSrc.includes("classList.toggle('alert'"), 'нет тревоги ! при 409');
+    assert.ok(html.includes('flex-wrap: wrap'), 'кнопки модалки не переносятся');
   });
   it('синк объединяет попродуктово', () => {
     assert.ok(syncSrc.includes('mergeCatalogs'), 'нет mergeCatalogs в sync');
