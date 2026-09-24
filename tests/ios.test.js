@@ -136,14 +136,14 @@ describe('ios: без системных диалогов', () => {
     assert.ok(appSrc.includes('На экран'), 'нет подсказки ручной установки для iPhone');
     assert.ok(appSrc.includes('display-mode: standalone'), 'кнопка не прячется в установленном приложении');
   });
-  it('токен не принимают за пароль: new-password, Chrome молчит', () => {
+  it('пароля нет в DOM: поле токена живёт только при открытых настройках', () => {
     const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
-    assert.ok(html.includes('id="tokenInput"'), 'нет tokenInput');
-    assert.ok(/id="tokenInput"[^>]*autocomplete="new-password"/.test(html), 'у токена нет new-password');
-  });
-  it('Chrome не сохраняет токен: readonly до первого фокуса', () => {
-    const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
-    assert.ok(/id="tokenInput"[^>]*readonly/.test(html), 'у токена нет readonly');
+    assert.ok(!html.includes('id="tokenInput"'), 'статичное поле токена в разметке');
+    assert.ok(html.includes('id="tokenWrap"'), 'нет tokenWrap');
+    assert.ok(appSrc.includes('ensureTokenInput'), 'нет ensureTokenInput');
+    assert.ok(appSrc.includes("input.type = 'password'"), 'поле не password');
+    assert.ok(appSrc.includes('autocomplete') && appSrc.includes('new-password'), 'нет new-password');
     assert.ok(appSrc.includes("removeAttribute('readonly')"), 'readonly не снимается по фокусу');
+    assert.ok(appSrc.includes('removeChild'), 'поле не удаляется при закрытии настроек');
   });
 });

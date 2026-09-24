@@ -3,7 +3,7 @@
 
 (function () {
   var LONGPRESS_MS = 3000;
-  var APP_VERSION = 'v52';
+  var APP_VERSION = 'v53';
   var L = window.QLLogic;
   var state = null;
   var selectedCat = null;
@@ -152,7 +152,7 @@
       renderInstallBtn();
     });
     el('installBtn').addEventListener('click', function () {
-      el('gearMenu').classList.remove('open');
+      setGear(false);
       if (deferredInstall) {
         deferredInstall.prompt();
         deferredInstall.userChoice.then(function () {
@@ -165,6 +165,38 @@
         'iPhone (Safari): Поделиться → «На экран „Домой“».\n' +
         'После установки открывать с иконки «Список».');
     });
+  }
+
+  /* Поле токена живёт в DOM только пока открыты настройки: Chrome видит пару
+   * «текст + type=password» как форму входа и предлагает сохранить токен при
+   * любом вводе (autocomplete он игнорирует). Без поля в разметке бабла нет.
+   * Источник правды — state.settings.token, поле лишь показывает его. */
+  function ensureTokenInput() {
+    var input = el('tokenInput');
+    if (input) return input;
+    input = document.createElement('input');
+    input.id = 'tokenInput';
+    input.type = 'password';
+    input.placeholder = 'GitHub token (только на этом устройстве)';
+    input.setAttribute('autocomplete', 'new-password');
+    input.setAttribute('readonly', 'readonly');
+    input.value = (state && state.settings.token) || '';
+    input.addEventListener('focus', function () {
+      input.removeAttribute('readonly');
+    });
+    el('tokenWrap').appendChild(input);
+    return input;
+  }
+  function setGear(open) {
+    var m = el('gearMenu');
+    if (open) {
+      m.classList.add('open');
+      ensureTokenInput();
+    } else {
+      m.classList.remove('open');
+      var t = el('tokenInput');
+      if (t && t.parentNode) t.parentNode.removeChild(t);
+    }
   }
 
   var saveError = '';
@@ -552,7 +584,7 @@
       save(); render();
     });
     el('clearList').addEventListener('click', function () {
-      el('gearMenu').classList.remove('open');
+      setGear(false);
       askConfirm('Очистить список? Количества и галочки сбросятся, названия сохранятся.').then(function (ok) {
         if (!ok) return;
         L.clearList(state.catalog);
@@ -560,7 +592,7 @@
       });
     });
     el('clearAll').addEventListener('click', function () {
-      el('gearMenu').classList.remove('open');
+      setGear(false);
       askConfirm('УДАЛИТЬ названия всех категорий и товаров НА ВСЕХ УСТРОЙСТВАХ? Это затронет всю семью.').then(function (ok) {
         if (!ok) return;
         L.clearAll(state.catalog);
@@ -570,26 +602,19 @@
     });
     el('saveSettings').addEventListener('click', function () {
       state.settings.repo = el('repoInput').value.trim() || 'russkin/purchases';
-      state.settings.token = el('tokenInput').value.trim();
-      el('gearMenu').classList.remove('open');
+      state.settings.token = ensureTokenInput().value.trim();
+      setGear(false);
       save(); render();
     });
-    /* Chrome считает пару «текст + пароль» формой входа и предлагает сохранить
-     * токен (autocomplete он игнорирует). readonly до первого фокуса ломает
-     * эвристику: такие поля менеджер паролей не трогает. Программной
-     * подстановке сохранённого токена readonly не мешает. */
-    el('tokenInput').addEventListener('focus', function () {
-      el('tokenInput').removeAttribute('readonly');
-    });
     el('clearCache').addEventListener('click', function () {
-      el('gearMenu').classList.remove('open');
+      setGear(false);
       askConfirm('Очистить кэш приложения? Списки и названия сохранятся, страница перезагрузится.').then(function (ok) {
         if (!ok) return;
         clearCacheNow();
       });
     });
     el('syncNowBtn').addEventListener('click', function () {
-      el('gearMenu').classList.remove('open');
+      setGear(false);
       doSync();
     });
     el('syncLight').addEventListener('click', function () {
@@ -597,15 +622,15 @@
     });
     el('gearBtn').addEventListener('click', function (e) {
       e.stopPropagation();
-      el('gearMenu').classList.toggle('open');
+      setGear(!el('gearMenu').classList.contains('open'));
     });
     el('diagBtn').addEventListener('click', function () {
-      el('gearMenu').classList.remove('open');
+      setGear(false);
       showInfo('Диагностика', diagText());
     });
     document.addEventListener('click', function (e) {
       var m = el('gearMenu');
-      if (m.classList.contains('open') && !m.contains(e.target)) m.classList.remove('open');
+      if (m.classList.contains('open') && !m.contains(e.target)) setGear(false);
     });
     window.addEventListener('online', function () {
       render();
@@ -644,7 +669,6 @@
       state = s;
       L.purgeChecked(state.catalog, Date.now());
       el('repoInput').value = state.settings.repo || '';
-      el('tokenInput').value = state.settings.token || '';
       el('appVer').textContent = 'Версия ' + APP_VERSION;
       el('appVerHead').textContent = APP_VERSION;
       render();
