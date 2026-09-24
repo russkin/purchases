@@ -3,7 +3,7 @@
 
 (function () {
   var LONGPRESS_MS = 3000;
-  var APP_VERSION = 'v29';
+  var APP_VERSION = 'v30';
   var L = window.QLLogic;
   var state = null;
   var selectedCat = null;
@@ -428,7 +428,7 @@
     });
     el('clearList').addEventListener('click', function () {
       el('gearMenu').classList.remove('open');
-      askConfirm('Очистить список? Количества и отметки будут сброшены.').then(function (ok) {
+      askConfirm('Очистить список? Количества и галочки сбросятся, названия сохранятся.').then(function (ok) {
         if (!ok) return;
         L.clearList(state.catalog);
         save(); render();
@@ -436,7 +436,7 @@
     });
     el('clearAll').addEventListener('click', function () {
       el('gearMenu').classList.remove('open');
-      askConfirm('Очистить ВСЕ кнопки? Названия категорий и товаров будут удалены.').then(function (ok) {
+      askConfirm('УДАЛИТЬ названия всех категорий и товаров НА ВСЕХ УСТРОЙСТВАХ? Это затронет всю семью.').then(function (ok) {
         if (!ok) return;
         L.clearAll(state.catalog);
         selectedCat = null;

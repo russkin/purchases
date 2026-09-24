@@ -42,6 +42,12 @@ describe('ios: без системных диалогов', () => {
     assert.ok(html.includes('id="appVerHead"'), 'нет appVerHead в шапке');
     assert.ok(appSrc.includes("el('appVerHead')"), 'версия не подставляется');
   });
+  it('кнопки очистки не путаются: нет «Очистить все кнопки»', () => {
+    const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+    assert.ok(!html.includes('>Очистить все кнопки<'), 'ловушка на месте');
+    assert.ok(html.includes('>Сбросить все названия<'), 'нет понятного названия');
+    assert.ok(appSrc.includes('НА ВСЕХ УСТРОЙСТВАХ'), 'нет предупреждения в confirm');
+  });
   it('журнал подключён: QLJournal, публикация, скрипт', () => {
     const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
     assert.ok(html.includes('journal.js'), 'нет journal.js в index.html');
