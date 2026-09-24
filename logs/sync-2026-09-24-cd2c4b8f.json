@@ -1,0 +1,1 @@
+{"device":"cd2c4b8f","version":"v28","at":"2026-09-24T05:13:48.361Z","journal":[{"t":1790226819743,"type":"sync","text":"ошибка синка: TypeError: Load failed"},{"t":1790226819752,"type":"log","text":"log-error: TypeError: Load failed"},{"t":1790226828361,"type":"sync","text":"ошибка синка: Error: github-put 409"}]}
