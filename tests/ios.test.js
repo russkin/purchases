@@ -94,7 +94,7 @@ describe('ios: без системных диалогов', () => {
     assert.ok(appSrc.includes('downlink'), 'скорость сети не читается');
     assert.ok(appSrc.includes('МБ/с'), 'скорость не в мегабайтах');
     assert.ok(html.includes('syncLight::after'), 'посылка без скотча');
-    assert.ok(appSrc.includes("el('syncLight').addEventListener('click'"), 'тап по светофору не запускает синк');
+    assert.ok(appSrc.includes("on('syncLight', 'click'"), 'тап по светофору не запускает синк');
     assert.ok(appSrc.includes("classList.toggle('alert'"), 'нет тревоги ! при 409');
     assert.ok(html.includes('flex-wrap: wrap'), 'кнопки модалки не переносятся');
   });
@@ -145,5 +145,9 @@ describe('ios: без системных диалогов', () => {
     assert.ok(appSrc.includes('autocomplete') && appSrc.includes('new-password'), 'нет new-password');
     assert.ok(appSrc.includes("removeAttribute('readonly')"), 'readonly не снимается по фокусу');
     assert.ok(appSrc.includes('removeChild'), 'поле не удаляется при закрытии настроек');
+  });
+  it('расcинхрон кэшей не роняет приложение: подписки только через on()', () => {
+    assert.ok(/function on\(id,/.test(appSrc), 'нет helper on()');
+    assert.ok(!/el\('[^']+'\)\.addEventListener/.test(appSrc), 'прямая подписка на el()');
   });
 });

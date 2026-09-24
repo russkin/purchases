@@ -3,7 +3,7 @@
 
 (function () {
   var LONGPRESS_MS = 3000;
-  var APP_VERSION = 'v53';
+  var APP_VERSION = 'v54';
   var L = window.QLLogic;
   var state = null;
   var selectedCat = null;
@@ -13,6 +13,14 @@
   var bootStack = '';
 
   function el(id) { return document.getElementById(id); }
+
+  /* Подписка, стойкая к рассинхрону кэшей: если index.html старый, а app.js новый,
+   * элемента может не быть — пропускаем подписку, а не роняем всё приложение. */
+  function on(id, ev, fn) {
+    var n = el(id);
+    if (n) n.addEventListener(ev, fn);
+    return n;
+  }
 
   window.addEventListener('error', function (e) {
     var msg = (e && e.message) ? e.message : String(e);
@@ -112,16 +120,16 @@
     return lines.join('\n');
   }
   function wireModal() {
-    el('modalOk').addEventListener('click', function () {
+    on('modalOk', 'click', function () {
       var input = el('modalInput');
       if (input.style.display === 'none') closeModal(true);
       else closeModal(input.value);
     });
-    el('modalCancel').addEventListener('click', function () {
+    on('modalCancel', 'click', function () {
       var input = el('modalInput');
       closeModal(input.style.display === 'none' ? false : null);
     });
-    el('modalClear').addEventListener('click', function () {
+    on('modalClear', 'click', function () {
       closeModal('');
     });
   }
@@ -151,7 +159,7 @@
       deferredInstall = null;
       renderInstallBtn();
     });
-    el('installBtn').addEventListener('click', function () {
+    on('installBtn', 'click', function () {
       setGear(false);
       if (deferredInstall) {
         deferredInstall.prompt();
@@ -184,7 +192,8 @@
     input.addEventListener('focus', function () {
       input.removeAttribute('readonly');
     });
-    el('tokenWrap').appendChild(input);
+    var w = el('tokenWrap');
+    if (w) w.appendChild(input);
     return input;
   }
   function setGear(open) {
@@ -578,12 +587,12 @@
     wireModal();
     wireInstall();
     /* Кнопка-переключатель режимов: показывает текущий (Д/С), нажатие меняет. */
-    el('menuBtn').addEventListener('click', function () {
+    on('menuBtn', 'click', function () {
       state.settings.mode = state.settings.mode === 'add' ? 'list' : 'add';
       selectedCat = null;
       save(); render();
     });
-    el('clearList').addEventListener('click', function () {
+    on('clearList', 'click', function () {
       setGear(false);
       askConfirm('Очистить список? Количества и галочки сбросятся, названия сохранятся.').then(function (ok) {
         if (!ok) return;
@@ -591,7 +600,7 @@
         save(); render();
       });
     });
-    el('clearAll').addEventListener('click', function () {
+    on('clearAll', 'click', function () {
       setGear(false);
       askConfirm('УДАЛИТЬ названия всех категорий и товаров НА ВСЕХ УСТРОЙСТВАХ? Это затронет всю семью.').then(function (ok) {
         if (!ok) return;
@@ -600,31 +609,31 @@
         save(); render();
       });
     });
-    el('saveSettings').addEventListener('click', function () {
+    on('saveSettings', 'click', function () {
       state.settings.repo = el('repoInput').value.trim() || 'russkin/purchases';
       state.settings.token = ensureTokenInput().value.trim();
       setGear(false);
       save(); render();
     });
-    el('clearCache').addEventListener('click', function () {
+    on('clearCache', 'click', function () {
       setGear(false);
       askConfirm('Очистить кэш приложения? Списки и названия сохранятся, страница перезагрузится.').then(function (ok) {
         if (!ok) return;
         clearCacheNow();
       });
     });
-    el('syncNowBtn').addEventListener('click', function () {
+    on('syncNowBtn', 'click', function () {
       setGear(false);
       doSync();
     });
-    el('syncLight').addEventListener('click', function () {
+    on('syncLight', 'click', function () {
       doSync();
     });
-    el('gearBtn').addEventListener('click', function (e) {
+    on('gearBtn', 'click', function (e) {
       e.stopPropagation();
       setGear(!el('gearMenu').classList.contains('open'));
     });
-    el('diagBtn').addEventListener('click', function () {
+    on('diagBtn', 'click', function () {
       setGear(false);
       showInfo('Диагностика', diagText());
     });
