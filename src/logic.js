@@ -118,6 +118,34 @@ function removeFromList(catalog, catIndex, prodIndex, nowMs) {
   return catalog;
 }
 
+/* Ручная сортировка: перенос элемента на позицию to со сдвигом остальных.
+ * Слияние позиционное, поэтому свежая метка ts ставится ВСЕМ ячейкам
+ * затронутого диапазона — иначе чужой порядок или старые данные победят.
+ * Вне диапазона и from===to — ничего не делает. */
+function moveCategory(catalog, from, to, nowMs) {
+  var t = nowMs || Date.now();
+  var cats = catalog.categories;
+  if (from < 0 || from >= cats.length || to < 0 || to >= cats.length || from === to) return catalog;
+  var item = cats.splice(from, 1)[0];
+  cats.splice(to, 0, item);
+  var lo = Math.min(from, to);
+  var hi = Math.max(from, to);
+  for (var i = lo; i <= hi; i++) cats[i].ts = t;
+  return catalog;
+}
+
+function moveProduct(catalog, catIndex, from, to, nowMs) {
+  var t = nowMs || Date.now();
+  var prods = catalog.categories[catIndex].products;
+  if (from < 0 || from >= prods.length || to < 0 || to >= prods.length || from === to) return catalog;
+  var item = prods.splice(from, 1)[0];
+  prods.splice(to, 0, item);
+  var lo = Math.min(from, to);
+  var hi = Math.max(from, to);
+  for (var i = lo; i <= hi; i++) prods[i].ts = t;
+  return catalog;
+}
+
 /* Кнопка «Очистить список»: обнулить количества и отметки, имена оставить. */
 function clearList(catalog, nowMs) {
   var t = nowMs || Date.now();
@@ -358,6 +386,8 @@ var api = {
   decProduct: decProduct,
   setChecked: setChecked,
   removeFromList: removeFromList,
+  moveCategory: moveCategory,
+  moveProduct: moveProduct,
   clearList: clearList,
   clearAll: clearAll,
   startOfDayMs: startOfDayMs,

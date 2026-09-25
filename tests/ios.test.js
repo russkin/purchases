@@ -157,4 +157,14 @@ describe('ios: без системных диалогов', () => {
     assert.ok(appSrc.includes('navigator.share'), 'нет системного шаринга');
     assert.ok(appSrc.includes('clipboard'), 'нет копирования в буфер');
   });
+  it('режим порядка: кнопка, стрелки, move-логика', () => {
+    const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+    assert.ok(html.includes('id="sortBtn"'), 'нет sortBtn в меню');
+    assert.ok(html.includes('mfirst') && html.includes('mlast'), 'нет стилей стрелок');
+    assert.ok(html.includes('sorting'), 'нет стиля режима порядка');
+    assert.ok(appSrc.includes('sortMode'), 'нет sortMode');
+    assert.ok(appSrc.includes('moveCategory') && appSrc.includes('moveProduct'), 'порядок не двигает');
+    const logicSrc = fs.readFileSync(path.join(__dirname, '..', 'src/logic.js'), 'utf8');
+    assert.ok(logicSrc.includes('moveCategory') && logicSrc.includes('moveProduct'), 'нет move в логике');
+  });
 });

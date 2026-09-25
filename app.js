@@ -3,10 +3,11 @@
 
 (function () {
   var LONGPRESS_MS = 3000;
-  var APP_VERSION = 'v55';
+  var APP_VERSION = 'v56';
   var L = window.QLLogic;
   var state = null;
   var selectedCat = null;
+  var sortMode = false;
   var syncStatus = '';
   var lastAction = '';
   var bootError = '';
@@ -405,14 +406,62 @@
 
   /* --- Режим добавления --- */
 
+  /* Стрелки режима порядка (⏮ в начало, ⏭ в конец, пара направлений).
+   * Каждая перестановка идёт через save() — со свежими ts и синком. */
+  function arrowBtn(b, cls, sym, label, enabled, go) {
+    var m = document.createElement('button');
+    m.className = cls;
+    m.textContent = sym;
+    m.setAttribute('aria-label', label);
+    if (!enabled) m.disabled = true;
+    else m.addEventListener('click', function (e) {
+      e.stopPropagation();
+      go();
+      save(); render();
+    });
+    b.appendChild(m);
+  }
+  function catSortArrows(b, ci, n) {
+    arrowBtn(b, 'mfirst', '⏮', 'В начало', ci > 0, function () {
+      L.moveCategory(state.catalog, ci, 0);
+    });
+    arrowBtn(b, 'mlast', '⏭', 'В конец', ci < n - 1, function () {
+      L.moveCategory(state.catalog, ci, n - 1);
+    });
+    arrowBtn(b, 'minus', '‹', 'Влево', ci > 0, function () {
+      L.moveCategory(state.catalog, ci, ci - 1);
+    });
+    arrowBtn(b, 'plus', '›', 'Вправо', ci < n - 1, function () {
+      L.moveCategory(state.catalog, ci, ci + 1);
+    });
+  }
+  function prodSortArrows(b, ci, pi, n) {
+    arrowBtn(b, 'mfirst', '⏮', 'В начало', pi > 0, function () {
+      L.moveProduct(state.catalog, ci, pi, 0);
+    });
+    arrowBtn(b, 'mlast', '⏭', 'В конец', pi < n - 1, function () {
+      L.moveProduct(state.catalog, ci, pi, n - 1);
+    });
+    arrowBtn(b, 'minus', '▲', 'Вверх', pi > 0, function () {
+      L.moveProduct(state.catalog, ci, pi, pi - 1);
+    });
+    arrowBtn(b, 'plus', '▼', 'Вниз', pi < n - 1, function () {
+      L.moveProduct(state.catalog, ci, pi, pi + 1);
+    });
+  }
+
   function catButton(c, ci) {
     var b = document.createElement('div');
     var hasActive = c.products.some(function (p) { return p.qty > 0; });
-    b.className = 'btn' + (c.name ? '' : ' empty') + (hasActive ? ' has-active' : '');
+    b.className = 'btn' + (c.name ? '' : ' empty') + (hasActive ? ' has-active' : '') + (sortMode ? ' sorting' : '');
     var label = document.createElement('div');
     label.className = 'btn-label';
     label.textContent = c.name || '+';
     b.appendChild(label);
+    if (sortMode) {
+      catSortArrows(b, ci, state.catalog.categories.length);
+      return b;
+    }
     b.addEventListener('click', function () {
       if (afterLongPress(b)) return;
       if (!c.name) {
@@ -438,11 +487,15 @@
 
   function prodButton(c, ci, p, pi) {
     var b = document.createElement('div');
-    b.className = 'btn' + (p.name ? '' : ' empty') + (p.checked ? ' bought' : (p.qty > 0 ? ' has-active' : ''));
+    b.className = 'btn' + (p.name ? '' : ' empty') + (p.checked ? ' bought' : (p.qty > 0 ? ' has-active' : '')) + (sortMode ? ' sorting' : '');
     var label = document.createElement('div');
     label.className = 'btn-label';
     label.textContent = p.name || '+';
     b.appendChild(label);
+    if (sortMode) {
+      prodSortArrows(b, ci, pi, c.products.length);
+      return b;
+    }
     if (p.name) {
       var qty = document.createElement('div');
       qty.className = 'qty';
@@ -568,6 +621,7 @@
     var parts = [];
     if (state) parts.push('Активных: ' + L.activeCount(state.catalog));
     parts.push(navigator.onLine ? 'online' : 'offline');
+    if (sortMode) parts.push('режим порядка');
     if (lastAction) parts.push(lastAction);
     if (saveError) parts.push(saveError);
     if (syncStatus) parts.push(syncStatus);
@@ -629,6 +683,7 @@
     on('menuBtn', 'click', function () {
       state.settings.mode = state.settings.mode === 'add' ? 'list' : 'add';
       selectedCat = null;
+      sortMode = false;
       save(); render();
     });
     on('clearList', 'click', function () {
@@ -668,6 +723,11 @@
     on('shareBtn', 'click', function () {
       setGear(false);
       shareList();
+    });
+    on('sortBtn', 'click', function () {
+      sortMode = !sortMode;
+      setGear(false);
+      render();
     });
     on('syncLight', 'click', function () {
       doSync();

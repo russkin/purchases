@@ -267,3 +267,51 @@ describe('shareText: текстовый список', () => {
     assert.equal(L.shareText(L.blankCatalog()), '');
   });
 });
+describe('ручной порядок: moveCategory/moveProduct', () => {
+  it('обмен соседей двигает и ставит свежие ts', () => {
+    const c = L.blankCatalog();
+    L.setCategoryName(c, 0, 'A', 100);
+    L.setCategoryName(c, 1, 'B', 100);
+    L.moveCategory(c, 0, 1, 200);
+    assert.equal(c.categories[0].name, 'B');
+    assert.equal(c.categories[1].name, 'A');
+    assert.equal(c.categories[0].ts, 200);
+    assert.equal(c.categories[1].ts, 200);
+    assert.equal(c.categories[2].ts, 0);
+  });
+  it('прыжок в начало сдвигает весь диапазон', () => {
+    const c = L.blankCatalog();
+    ['A', 'B', 'C', 'D'].forEach((n, i) => L.setCategoryName(c, i, n, 100));
+    L.moveCategory(c, 3, 0, 300);
+    assert.deepEqual(
+      [c.categories[0].name, c.categories[1].name, c.categories[2].name, c.categories[3].name],
+      ['D', 'A', 'B', 'C']
+    );
+    for (let i = 0; i <= 3; i++) assert.equal(c.categories[i].ts, 300);
+    assert.equal(c.categories[4].ts, 0);
+  });
+  it('товары двигаются внутри своей категории', () => {
+    const c = L.blankCatalog();
+    L.setProductName(c, 0, 0, 'a', 100);
+    L.setProductName(c, 0, 1, 'b', 100);
+    L.setProductName(c, 0, 2, 'c', 100);
+    L.setProductName(c, 1, 0, 'x', 100);
+    L.moveProduct(c, 0, 2, 0, 400);
+    assert.deepEqual(
+      [c.categories[0].products[0].name, c.categories[0].products[1].name, c.categories[0].products[2].name],
+      ['c', 'a', 'b']
+    );
+    for (let i = 0; i <= 2; i++) assert.equal(c.categories[0].products[i].ts, 400);
+    assert.equal(c.categories[1].products[0].name, 'x');
+    assert.equal(c.categories[1].products[0].ts, 100);
+  });
+  it('границы и from===to — ничего не делают', () => {
+    const c = L.blankCatalog();
+    L.setCategoryName(c, 0, 'A', 100);
+    L.moveCategory(c, 0, 0, 200);
+    L.moveCategory(c, -1, 5, 200);
+    L.moveCategory(c, 0, 99, 200);
+    assert.equal(c.categories[0].name, 'A');
+    assert.equal(c.categories[0].ts, 100);
+  });
+});
