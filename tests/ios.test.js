@@ -162,7 +162,8 @@ describe('ios: без системных диалогов', () => {
     assert.ok(html.includes('id="sortBtn"'), 'нет sortBtn в меню');
     assert.ok(html.includes('mfirst') && html.includes('mlast'), 'нет стилей стрелок');
     assert.ok(html.includes('sorting'), 'нет стиля режима порядка');
-    assert.ok(html.includes('.btn.sorting .btn-label'), 'текст в режиме порядка не уменьшен');
+    assert.ok(!html.includes('.btn.sorting .btn-label'), 'текст в режиме порядка уменьшен');
+    assert.ok(html.includes('.btn.sorting .minus'), 'стрелки в режиме порядка не полупрозрачны');
     assert.ok(appSrc.includes('sortMode'), 'нет sortMode');
     assert.ok(appSrc.includes('moveCategory') && appSrc.includes('moveProduct'), 'порядок не двигает');
     const logicSrc = fs.readFileSync(path.join(__dirname, '..', 'src/logic.js'), 'utf8');

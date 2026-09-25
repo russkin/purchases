@@ -4,7 +4,7 @@
 Репозиторий: `git@github.com:russkin/purchases.git`, ветка `main`.
 Прод: https://russkin.github.io/purchases/ (GitHub Pages, source = GitHub Actions).
 Тестовая платформа: планшет HUAWEI MediaPad T3 10 (Android 7), телефоны Android 10+, iPhone 7 (Chrome).
-Текущая версия: v58 (сентябрь 2026). Тестов: 103 (`logic` + `ios` + `sync` + `sync-devices` + `journal`).
+Текущая версия: v59 (сентябрь 2026). Тестов: 103 (`logic` + `ios` + `sync` + `sync-devices` + `journal`).
 
 ## Регламент публикации (обязательный после КАЖДОГО коммита)
 
