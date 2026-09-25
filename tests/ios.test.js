@@ -150,4 +150,11 @@ describe('ios: без системных диалогов', () => {
     assert.ok(/function on\(id,/.test(appSrc), 'нет helper on()');
     assert.ok(!/el\('[^']+'\)\.addEventListener/.test(appSrc), 'прямая подписка на el()');
   });
+  it('поделиться списком: кнопка, shareText, шаринг или копирование', () => {
+    const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+    assert.ok(html.includes('id="shareBtn"'), 'нет shareBtn в меню');
+    assert.ok(appSrc.includes('shareText'), 'нет shareText');
+    assert.ok(appSrc.includes('navigator.share'), 'нет системного шаринга');
+    assert.ok(appSrc.includes('clipboard'), 'нет копирования в буфер');
+  });
 });

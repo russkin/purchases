@@ -247,3 +247,23 @@ describe('seed-каталог', () => {
     assert.equal(c.categories[1].products[0].name, 'Батон');
   });
 });
+describe('shareText: текстовый список', () => {
+  it('звёздочка перед категорией, товары с тире и количеством', () => {
+    const c = L.blankCatalog();
+    L.setCategoryName(c, 0, 'Молочка');
+    L.setProductName(c, 0, 0, 'Молоко');
+    L.incProduct(c, 0, 0);
+    L.incProduct(c, 0, 0);
+    L.setProductName(c, 0, 1, 'Кефир');
+    L.incProduct(c, 0, 1);
+    L.setCategoryName(c, 1, 'Хлеб');
+    L.setProductName(c, 1, 0, 'Батон');
+    L.incProduct(c, 1, 0);
+    L.incProduct(c, 1, 0);
+    L.incProduct(c, 1, 0);
+    assert.equal(L.shareText(c), '* Молочка\nМолоко - 2\nКефир - 1\n* Хлеб\nБатон - 3');
+  });
+  it('пустой каталог — пустая строка', () => {
+    assert.equal(L.shareText(L.blankCatalog()), '');
+  });
+});

@@ -3,7 +3,7 @@
 
 (function () {
   var LONGPRESS_MS = 3000;
-  var APP_VERSION = 'v54';
+  var APP_VERSION = 'v55';
   var L = window.QLLogic;
   var state = null;
   var selectedCat = null;
@@ -95,6 +95,45 @@
     el('modalCancel').style.display = 'none';
     el('modalBack').classList.add('open');
     return new Promise(function (resolve) { modalResolve = resolve; });
+  }
+
+  /* Поделиться списком: системное меню (телефоны), иначе — копирование
+   * в буфер, на совсем старых — текст в окне для ручного копирования. */
+  function copyText(text, done) {
+    function fallback() {
+      try {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        var ok = document.execCommand('copy');
+        document.body.removeChild(ta);
+        done(ok);
+      } catch (e) { done(false); }
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () { done(true); }, fallback);
+    } else fallback();
+  }
+  function shareList() {
+    var text = L.shareText(state.catalog);
+    if (!text) {
+      showInfo('Поделиться списком', 'Список пуст — нечего отправлять.');
+      return;
+    }
+    if (navigator.share) {
+      try {
+        var p = navigator.share({ title: 'Быстрый список', text: text });
+        if (p && p.catch) p.catch(function () {});
+        return;
+      } catch (e) {}
+    }
+    copyText(text, function (ok) {
+      if (ok) showInfo('Поделиться списком', 'Список скопирован — вставь его в мессенджер.\n\n' + text);
+      else showInfo('Поделиться списком (скопируй вручную)', text);
+    });
   }
   function diagText() {
     var lines = [];
@@ -625,6 +664,10 @@
     on('syncNowBtn', 'click', function () {
       setGear(false);
       doSync();
+    });
+    on('shareBtn', 'click', function () {
+      setGear(false);
+      shareList();
     });
     on('syncLight', 'click', function () {
       doSync();

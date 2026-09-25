@@ -217,6 +217,20 @@ function activeCount(catalog) {
   return n;
 }
 
+/* Текст для «Поделиться списком»: звёздочка перед категорией,
+ * каждый товар с новой строки, после названия — тире и количество. */
+function shareText(catalog) {
+  var lines = [];
+  listView(catalog).forEach(function (g) {
+    lines.push('* ' + (g.name || 'Без категории'));
+    g.items.forEach(function (it) {
+      var p = it.product;
+      lines.push(p.qty > 0 ? ((p.name || 'Товар') + ' - ' + p.qty) : (p.name || 'Товар'));
+    });
+  });
+  return lines.join('\n');
+}
+
 /* --- Нормализация (защита от битых данных старых версий/синка) --- */
 
 function normalizeProduct(p) {
@@ -350,6 +364,7 @@ var api = {
   purgeChecked: purgeChecked,
   listView: listView,
   activeCount: activeCount,
+  shareText: shareText,
   isCatalogEmpty: isCatalogEmpty,
   mergeDecision: mergeDecision,
   normalizeProduct: normalizeProduct,
