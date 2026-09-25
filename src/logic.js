@@ -121,6 +121,8 @@ function removeFromList(catalog, catIndex, prodIndex, nowMs) {
 /* Ручная сортировка: перенос элемента на позицию to со сдвигом остальных.
  * Слияние позиционное, поэтому свежая метка ts ставится ВСЕМ ячейкам
  * затронутого диапазона — иначе чужой порядок или старые данные победят.
+ * У категорий едут и товары целиком (им тоже свежая ts), иначе на принимающем
+ * устройстве имя возьмётся из нового порядка, а товары останутся из старого.
  * Вне диапазона и from===to — ничего не делает. */
 function moveCategory(catalog, from, to, nowMs) {
   var t = nowMs || Date.now();
@@ -130,7 +132,10 @@ function moveCategory(catalog, from, to, nowMs) {
   cats.splice(to, 0, item);
   var lo = Math.min(from, to);
   var hi = Math.max(from, to);
-  for (var i = lo; i <= hi; i++) cats[i].ts = t;
+  for (var i = lo; i <= hi; i++) {
+    cats[i].ts = t;
+    cats[i].products.forEach(function (p) { p.ts = t; });
+  }
   return catalog;
 }
 

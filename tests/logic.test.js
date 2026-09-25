@@ -314,4 +314,21 @@ describe('ручной порядок: moveCategory/moveProduct', () => {
     assert.equal(c.categories[0].name, 'A');
     assert.equal(c.categories[0].ts, 100);
   });
+  it('pull после перестановки категорий: товары едут с именами, не мешаются', () => {
+    function twoCats() {
+      const c = L.blankCatalog();
+      L.setCategoryName(c, 0, 'Молочка', 100);
+      L.setProductName(c, 0, 0, 'Молоко', 100);
+      L.setCategoryName(c, 1, 'Хлеб', 100);
+      L.setProductName(c, 1, 0, 'Батон', 100);
+      return c;
+    }
+    const remote = twoCats();
+    L.moveCategory(remote, 0, 1, 200);
+    const merged = L.mergeCatalogs(twoCats(), remote);
+    assert.equal(merged.categories[0].name, 'Хлеб');
+    assert.equal(merged.categories[0].products[0].name, 'Батон');
+    assert.equal(merged.categories[1].name, 'Молочка');
+    assert.equal(merged.categories[1].products[0].name, 'Молоко');
+  });
 });
