@@ -248,7 +248,7 @@ describe('seed-каталог', () => {
   });
 });
 describe('shareText: текстовый список', () => {
-  it('звёздочка перед категорией, товары с тире и количеством', () => {
+  it('звёздочка и двоеточие, товары с тире, пустая строка между группами', () => {
     const c = L.blankCatalog();
     L.setCategoryName(c, 0, 'Молочка');
     L.setProductName(c, 0, 0, 'Молоко');
@@ -261,7 +261,7 @@ describe('shareText: текстовый список', () => {
     L.incProduct(c, 1, 0);
     L.incProduct(c, 1, 0);
     L.incProduct(c, 1, 0);
-    assert.equal(L.shareText(c), '* Молочка\nМолоко - 2\nКефир - 1\n* Хлеб\nБатон - 3');
+    assert.equal(L.shareText(c), '* Молочка:\nМолоко - 2\nКефир - 1\n\n* Хлеб:\nБатон - 3');
   });
   it('пустой каталог — пустая строка', () => {
     assert.equal(L.shareText(L.blankCatalog()), '');

@@ -3,7 +3,7 @@
 
 (function () {
   var LONGPRESS_MS = 3000;
-  var APP_VERSION = 'v59';
+  var APP_VERSION = 'v60';
   var L = window.QLLogic;
   var state = null;
   var selectedCat = null;
@@ -66,10 +66,13 @@
   /* Встроенный диалог: на iOS Chrome системный prompt/confirm из отложенных
    * обработчиков (таймер лонгпресса) блокируется, поэтому своё модальное окно. */
   var modalResolve = null;
+  var modalShareText = null;
   function closeModal(value) {
     el('modalBack').classList.remove('open');
     el('modalCancel').style.display = '';
     el('modalClear').style.display = 'none';
+    el('modalClear').textContent = 'Очистить';
+    modalShareText = null;
     var r = modalResolve;
     modalResolve = null;
     if (r) r(value);
@@ -88,11 +91,17 @@
   function askConfirm(title) {
     return askText(title, '', false).then(function (v) { return v === true; });
   }
-  function showInfo(title, body) {
+  function showInfo(title, body, shareText) {
     el('modalText').textContent = title + '\n\n' + body;
     el('modalInput').style.display = 'none';
     el('modalOk').textContent = 'OK';
-    el('modalClear').style.display = 'none';
+    if (shareText) {
+      el('modalClear').textContent = 'Поделиться';
+      el('modalClear').style.display = '';
+      modalShareText = shareText;
+    } else {
+      el('modalClear').style.display = 'none';
+    }
     el('modalCancel').style.display = 'none';
     el('modalBack').classList.add('open');
     return new Promise(function (resolve) { modalResolve = resolve; });
@@ -124,6 +133,10 @@
       showInfo('Поделиться списком', 'Список пуст — нечего отправлять.');
       return;
     }
+    shareExternal(text);
+  }
+  /* Отправка текста наружу: системное меню, иначе буфер, иначе окно для ручного копирования. */
+  function shareExternal(text) {
     if (navigator.share) {
       try {
         var p = navigator.share({ title: 'Быстрый список', text: text });
@@ -132,8 +145,8 @@
       } catch (e) {}
     }
     copyText(text, function (ok) {
-      if (ok) showInfo('Поделиться списком', 'Список скопирован — вставь его в мессенджер.\n\n' + text);
-      else showInfo('Поделиться списком (скопируй вручную)', text);
+      if (ok) showInfo('Готово', 'Скопировано — вставь в мессенджер.\n\n' + text);
+      else showInfo('Скопируй вручную', text);
     });
   }
   function diagText() {
@@ -170,7 +183,11 @@
       closeModal(input.style.display === 'none' ? false : null);
     });
     on('modalClear', 'click', function () {
-      closeModal('');
+      if (modalShareText) {
+        var t = modalShareText;
+        closeModal(true);
+        shareExternal(t);
+      } else closeModal('');
     });
   }
 
@@ -339,6 +356,37 @@
     }, POLL_MS);
   }
 
+  /* Проверка новой версии: app.js?nocache=… идёт мимо кэша SW (см. sw.js),
+   * поэтому видим свежий APP_VERSION. Нашли новее — спрашиваем один раз
+   * и обновляемся через полную очистку кэша (как кнопка в ⚙, только сами). */
+  var CUR_VER = parseInt(String(APP_VERSION).replace(/[^0-9]/g, ''), 10) || 0;
+  var updateOfferedFor = 0;
+  var lastUpdateCheck = 0;
+  var UPDATE_CHECK_MS = 5 * 60 * 1000;
+  function checkUpdate() {
+    try {
+      if (!navigator.onLine || modalResolve) return;
+      var now = Date.now();
+      if (now - lastUpdateCheck < UPDATE_CHECK_MS) return;
+      lastUpdateCheck = now;
+      fetch('./app.js?nocache=' + now, { cache: 'no-store' }).then(function (r) {
+        if (!r.ok) return null;
+        return r.text();
+      }).then(function (t) {
+        if (!t || modalResolve) return;
+        var m = /APP_VERSION = 'v(\d+)'/.exec(t);
+        if (!m) return;
+        var v = parseInt(m[1], 10);
+        if (v > CUR_VER && v !== updateOfferedFor) {
+          updateOfferedFor = v;
+          askConfirm('Вышла новая версия приложения (v' + v + ') — обновить?').then(function (ok) {
+            if (ok) clearCacheNow();
+          });
+        }
+      }).catch(function () {});
+    } catch (e) {}
+  }
+
   /* Публикация журнала в logs/ при ошибке синка, не чаще раза в 15 минут
    * (иначе заспамим репозиторий коммитами). Имя: logs/sync-ГГГГ-ММ-ДД-<device>.json. */
   var lastJournalPublish = 0;
@@ -442,10 +490,10 @@
     arrowBtn(b, 'mlast', '⏭', 'В конец', pi < n - 1, function () {
       L.moveProduct(state.catalog, ci, pi, n - 1);
     });
-    arrowBtn(b, 'minus', '▲', 'Вверх', pi > 0, function () {
+    arrowBtn(b, 'minus', '‹', 'Вверх', pi > 0, function () {
       L.moveProduct(state.catalog, ci, pi, pi - 1);
     });
-    arrowBtn(b, 'plus', '▼', 'Вниз', pi < n - 1, function () {
+    arrowBtn(b, 'plus', '›', 'Вниз', pi < n - 1, function () {
       L.moveProduct(state.catalog, ci, pi, pi + 1);
     });
   }
@@ -729,6 +777,12 @@
       setGear(false);
       render();
     });
+    /* Выход из режима порядка тапом по названию/версии в шапке. */
+    function exitSort() {
+      if (sortMode) { sortMode = false; render(); }
+    }
+    on('appTitle', 'click', exitSort);
+    on('appVerHead', 'click', exitSort);
     on('syncLight', 'click', function () {
       doSync();
     });
@@ -738,7 +792,7 @@
     });
     on('diagBtn', 'click', function () {
       setGear(false);
-      showInfo('Диагностика', diagText());
+      showInfo('Диагностика', diagText(), diagText());
     });
     document.addEventListener('click', function (e) {
       var m = el('gearMenu');
@@ -762,6 +816,7 @@
       if (!state || document.hidden) return;
       L.purgeChecked(state.catalog, Date.now());
       render();
+      checkUpdate();
       var now = Date.now();
       if (state.settings.token && navigator.onLine && now - lastTabSync > 15000) {
         lastTabSync = now;
@@ -788,6 +843,7 @@
     }).then(function () {
       setupAutoUpdate();
       setupPolling();
+      checkUpdate();
       /* Автоподтягивание общего списка при открытии (ручной пункт в ⚙ не обязателен). */
       if (state.settings.token && navigator.onLine) doSync();
     });

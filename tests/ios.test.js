@@ -169,4 +169,23 @@ describe('ios: без системных диалогов', () => {
     const logicSrc = fs.readFileSync(path.join(__dirname, '..', 'src/logic.js'), 'utf8');
     assert.ok(logicSrc.includes('moveCategory') && logicSrc.includes('moveProduct'), 'нет move в логике');
   });
+  it('диагностика шарится: кнопка Поделиться', () => {
+    assert.ok(appSrc.includes('modalShareText'), 'нет modalShareText');
+    assert.ok(appSrc.includes("'Поделиться'"), 'нет кнопки Поделиться');
+    assert.ok(appSrc.includes('shareExternal'), 'нет shareExternal');
+    assert.ok(appSrc.includes("showInfo('Диагностика', diagText(), diagText())"), 'диагностика не шарится');
+  });
+  it('новая версия: проверка мимо кэша и вопрос обновить', () => {
+    assert.ok(appSrc.includes('checkUpdate'), 'нет checkUpdate');
+    assert.ok(appSrc.includes('nocache'), 'нет метки nocache');
+    assert.ok(appSrc.includes('Вышла новая версия'), 'нет вопроса про обновление');
+    const swSrc = fs.readFileSync(path.join(__dirname, '..', 'sw.js'), 'utf8');
+    assert.ok(swSrc.includes('nocache'), 'SW не пропускает проверку мимо кэша');
+  });
+  it('выход из порядка тапом по шапке', () => {
+    const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+    assert.ok(html.includes('id="appTitle"'), 'нет appTitle');
+    assert.ok(appSrc.includes('exitSort'), 'нет exitSort');
+    assert.ok(appSrc.includes("on('appVerHead', 'click'"), 'тап по версии не выходит из порядка');
+  });
 });

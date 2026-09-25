@@ -250,16 +250,19 @@ function activeCount(catalog) {
   return n;
 }
 
-/* Текст для «Поделиться списком»: звёздочка перед категорией,
- * каждый товар с новой строки, после названия — тире и количество. */
+/* Текст для «Поделиться списком»: звёздочка и двоеточие после категории,
+ * каждый товар с новой строки, после названия — тире и количество.
+ * Между категориями пустая строка, в конце списка её нет. */
 function shareText(catalog) {
+  var groups = listView(catalog);
   var lines = [];
-  listView(catalog).forEach(function (g) {
-    lines.push('* ' + (g.name || 'Без категории'));
+  groups.forEach(function (g, gi) {
+    lines.push('* ' + (g.name || 'Без категории') + ':');
     g.items.forEach(function (it) {
       var p = it.product;
       lines.push(p.qty > 0 ? ((p.name || 'Товар') + ' - ' + p.qty) : (p.name || 'Товар'));
     });
+    if (gi < groups.length - 1) lines.push('');
   });
   return lines.join('\n');
 }

@@ -1,4 +1,4 @@
-const CACHE = 'quicklist-v59';
+const CACHE = 'quicklist-v60';
 const ASSETS = [
   './',
   './index.html',
@@ -33,6 +33,12 @@ self.addEventListener('activate', (e) => {
 
 self.addEventListener('fetch', (e) => {
   if (e.request.method !== 'GET') return;
+  /* Проверка новой версии (app.js?nocache=…): всегда строго из сети,
+   * в кэш не кладём, чтобы не плодить мусорные записи. */
+  if (e.request.url.indexOf('nocache=') !== -1) {
+    e.respondWith(fetch(e.request));
+    return;
+  }
   e.respondWith(
     caches.match(e.request).then((hit) => {
       const net = fetch(e.request).then((res) => {
