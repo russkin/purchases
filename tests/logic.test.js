@@ -14,10 +14,10 @@ function demo() {
 }
 
 describe('каталог: имена и кнопки +', () => {
-  it('пустой каталог 20x20', () => {
+  it('пустой каталог 26x26', () => {
     const c = L.blankCatalog();
-    assert.equal(c.categories.length, 20);
-    assert.equal(c.categories[0].products.length, 20);
+    assert.equal(c.categories.length, 26);
+    assert.equal(c.categories[0].products.length, 26);
     assert.equal(c.categories[0].name, '');
   });
   it('переименование и сброс в +', () => {
@@ -28,6 +28,43 @@ describe('каталог: имена и кнопки +', () => {
     assert.equal(c.categories[0].name, '');
     L.setProductName(c, 0, 0, 'Молоко');
     assert.equal(c.categories[0].products[0].name, 'Молоко');
+    L.setProductName(c, 0, 1, 'Кефир. ');
+    assert.equal(c.categories[0].products[1].name, 'Кефир.');
+    L.setCategoryName(c, 1, 'Хлеб.  ');
+    assert.equal(c.categories[1].name, 'Хлеб.');
+  });
+  it('тёзка товара находится в другой категории', () => {
+    const c = L.blankCatalog();
+    L.setCategoryName(c, 0, 'Молочка');
+    L.setProductName(c, 0, 0, 'Молоко');
+    L.setCategoryName(c, 1, 'Хлеб');
+    const dup = L.findDuplicateProduct(c, ' молоко ', 1, 0);
+    assert.ok(dup);
+    assert.equal(dup.catIndex, 0);
+    assert.equal(dup.catName, 'Молочка');
+    assert.equal(L.findDuplicateProduct(c, 'Молоко', 0, 0), null);
+    assert.equal(L.findDuplicateProduct(c, 'Батон', 1, 0), null);
+    assert.equal(L.findDuplicateProduct(c, '   ', 1, 0), null);
+  });
+  it('слепок названий: восстановить только пустое', () => {
+    const c = L.blankCatalog();
+    L.setCategoryName(c, 0, 'Молочка');
+    L.setProductName(c, 0, 0, 'Молоко');
+    const snap = L.extractNames(c);
+    assert.ok(snap.savedAt > 0);
+    assert.equal(snap.categories[0].name, 'Молочка');
+    const c2 = L.blankCatalog();
+    const n = L.applyNames(c2, snap, 500);
+    assert.ok(n >= 2);
+    assert.equal(c2.categories[0].name, 'Молочка');
+    assert.equal(c2.categories[0].products[0].name, 'Молоко');
+    assert.equal(c2.categories[0].ts, 500);
+    L.setProductName(c2, 0, 1, 'Кефир', 100);
+    const n2 = L.applyNames(c2, snap, 600);
+    assert.equal(c2.categories[0].products[1].name, 'Кефир');
+    assert.equal(n2, 0);
+    assert.equal(L.applyNames(c2, null), 0);
+    assert.equal(L.applyNames(c2, {}), 0);
   });
 });
 
@@ -201,25 +238,25 @@ describe('mergeDecision: пустое не затирает непустое', (
   });
 });
 describe('normalizeCatalog: битые данные', () => {
-  it('null → пустая форма 20x20', () => {
+  it('null → пустая форма 26x26', () => {
     const c = L.normalizeCatalog(null);
-    assert.equal(c.categories.length, 20);
-    assert.equal(c.categories[0].products.length, 20);
+    assert.equal(c.categories.length, 26);
+    assert.equal(c.categories[0].products.length, 26);
   });
   it('сохраняет данные, чинит мусор', () => {
     const c = L.normalizeCatalog({ categories: [
       { name: 'Молочка', products: [{ name: 'Молоко', qty: '2', checked: true, checkedAt: 5 }] }
     ]});
-    assert.equal(c.categories.length, 20);
+    assert.equal(c.categories.length, 26);
     assert.equal(c.categories[0].name, 'Молочка');
     assert.equal(c.categories[0].products[0].qty, 2);
     assert.equal(c.categories[1].name, '');
-    assert.equal(c.categories[0].products[19].name, '');
+    assert.equal(c.categories[0].products[25].name, '');
   });
   it('лишние категории отбрасываются', () => {
     const cats = [];
-    for (let i = 0; i < 25; i++) cats.push({ name: 'C' + i, products: [] });
-    assert.equal(L.normalizeCatalog({ categories: cats }).categories.length, 20);
+    for (let i = 0; i < 30; i++) cats.push({ name: 'C' + i, products: [] });
+    assert.equal(L.normalizeCatalog({ categories: cats }).categories.length, 26);
   });
 });
 describe('seed-каталог', () => {

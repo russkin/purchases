@@ -6,6 +6,7 @@
 (function () {
   var LS_KEY = 'quicklist-v1';
   var DB_NAME = 'quicklist';
+  var NAMES_KEY = 'quicklist-names-v1';
   var STORE = 'state';
 
   function lsRead() {
@@ -127,6 +128,25 @@
         if (!d) return ok && lsWorks();
         return idbSet(d, state).then(function () { return true; }).catch(function () { return ok; });
       });
+    },
+    /* Слепок типовых названий (без количеств): только localStorage,
+     * в синк не ходит, страховка на этом устройстве. */
+    saveNames: function (obj) {
+      try {
+        localStorage.setItem(NAMES_KEY, JSON.stringify(obj));
+        return true;
+      } catch (e) {
+        return false;
+      }
+    },
+    loadNames: function () {
+      try {
+        var raw = localStorage.getItem(NAMES_KEY);
+        var o = raw ? JSON.parse(raw) : null;
+        return (o && Array.isArray(o.categories)) ? o : null;
+      } catch (e) {
+        return null;
+      }
     }
   };
 })();

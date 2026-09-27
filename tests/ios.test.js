@@ -189,6 +189,29 @@ describe('ios: без системных диалогов', () => {
     assert.ok(appSrc.includes('exitSort'), 'нет exitSort');
     assert.ok(appSrc.includes("on('appVerHead', 'click'"), 'тап по версии не выходит из порядка');
   });
+  it('тёзка товара: предупреждение с категорией', () => {
+    assert.ok(appSrc.includes('findDuplicateProduct'), 'нет проверки дубля');
+    assert.ok(appSrc.includes('уже есть в категории'), 'нет текста предупреждения');
+    assert.ok(appSrc.includes('saveProductName'), 'нет saveProductName');
+  });
+  it('слепок названий: запомнить и восстановить', () => {
+    const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+    assert.ok(html.includes('id="namesSaveBtn"'), 'нет namesSaveBtn');
+    assert.ok(html.includes('id="namesRestoreBtn"'), 'нет namesRestoreBtn');
+    assert.ok(appSrc.includes('extractNames'), 'нет extractNames');
+    assert.ok(appSrc.includes('applyNames'), 'нет applyNames');
+    assert.ok(appSrc.includes('saveNames') && appSrc.includes('loadNames'), 'слепок не хранится');
+  });
+  it('репозиторий в подменю для администратора', () => {
+    const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+    assert.ok(html.includes('id="repoBtn"'), 'нет repoBtn');
+    assert.ok(html.includes('id="gearSettings"'), 'нет gearSettings');
+    assert.ok(appSrc.includes('администратора'), 'нет предупреждения');
+  });
+  it('удаление из корзины: подтверждение', () => {
+    assert.ok(appSrc.includes('Убрать «'), 'нет вопроса перед удалением');
+    assert.ok(appSrc.includes('removeFromList'), 'нет removeFromList');
+  });
   it('скролл: вход в категорию вверх, выход с возвратом на место', () => {
     assert.ok(appSrc.includes('openCategory'), 'нет openCategory');
     assert.ok(appSrc.includes('closeCategory'), 'нет closeCategory');

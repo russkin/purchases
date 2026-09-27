@@ -6,8 +6,8 @@
  */
 'use strict';
 
-var MAX_CATEGORIES = 20;
-var MAX_PRODUCTS = 20;
+var MAX_CATEGORIES = 26;
+var MAX_PRODUCTS = 26;
 
 function blankProduct() {
   return { name: '', qty: 0, checked: false, checkedAt: 0, ts: 0 };
@@ -61,7 +61,9 @@ function fillEmptyNames(catalog) {
 }
 
 function normName(s) {
-  return String(s == null ? '' : s).trim();
+  /* Клавиатуры любят добавлять пробел после точки — висящий в конце
+   * пробел отрезаем всегда (создание и переименование идут сюда). */
+  return String(s == null ? '' : s).replace(/[\s\uFEFF\xA0]+$/g, '').trim();
 }
 
 /* --- Категории / товары --- */
@@ -78,6 +80,53 @@ function setProductName(catalog, catIndex, prodIndex, name, nowMs) {
   p.name = normName(name);
   p.ts = nowMs || Date.now();
   return catalog;
+}
+
+/* Поиск тёзки товара в других ячейках (предупреждение о дубле).
+ * Возвращает { catIndex, catName } или null. Сравнение по trim без регистра,
+ * пустое имя и саму исключаемую ячейку не находит. */
+function findDuplicateProduct(catalog, name, skipCat, skipProd) {
+  var want = normName(name).toLowerCase();
+  if (!want) return null;
+  for (var ci = 0; ci < catalog.categories.length; ci++) {
+    var c = catalog.categories[ci];
+    for (var pi = 0; pi < c.products.length; pi++) {
+      if (ci === skipCat && pi === skipProd) continue;
+      if (normName(c.products[pi].name).toLowerCase() === want) {
+        return { catIndex: ci, catName: c.name };
+      }
+    }
+  }
+  return null;
+}
+
+/* Слепок названий (без количеств): страховка от случайных очисток.
+ * Хранится локально на устройстве, в синк не ходит. */
+function extractNames(catalog) {
+  return {
+    savedAt: Date.now(),
+    categories: catalog.categories.map(function (c) {
+      return { name: c.name, products: c.products.map(function (p) { return p.name; }) };
+    })
+  };
+}
+
+/* Восстановление названий из слепка: заполняет ТОЛЬКО пустые ячейки,
+ * занятые не трогает. Возвращает число заполненных. Битый слепок — 0. */
+function applyNames(catalog, snap, nowMs) {
+  var t = nowMs || Date.now();
+  if (!snap || !Array.isArray(snap.categories)) return 0;
+  var filled = 0;
+  catalog.categories.forEach(function (c, ci) {
+    var sc = snap.categories[ci];
+    if (!sc) return;
+    if (!c.name && sc.name) { c.name = normName(sc.name); c.ts = t; filled += 1; }
+    c.products.forEach(function (p, pi) {
+      var nm = sc.products && sc.products[pi];
+      if (!p.name && nm) { p.name = normName(nm); p.ts = t; filled += 1; }
+    });
+  });
+  return filled;
 }
 
 /* Нажатие на большую кнопку товара: +1, снимает отметку «куплен». */
@@ -291,7 +340,7 @@ function normalizeCategory(c) {
   return { name: normName(c.name), products: products, ts: ts };
 }
 
-/* Приводит любой вход к форме 20×20, сохраняя имеющиеся данные. */
+/* Приводит любой вход к форме 26×26, сохраняя имеющиеся данные. */
 function normalizeCatalog(catalog) {
   var src = (catalog && Array.isArray(catalog.categories)) ? catalog.categories : [];
   var categories = [];
@@ -390,6 +439,9 @@ var api = {
   fillEmptyNames: fillEmptyNames,
   setCategoryName: setCategoryName,
   setProductName: setProductName,
+  findDuplicateProduct: findDuplicateProduct,
+  extractNames: extractNames,
+  applyNames: applyNames,
   incProduct: incProduct,
   decProduct: decProduct,
   setChecked: setChecked,

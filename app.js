@@ -3,7 +3,7 @@
 
 (function () {
   var LONGPRESS_MS = 3000;
-  var APP_VERSION = 'v62';
+  var APP_VERSION = 'v63';
   var L = window.QLLogic;
   var state = null;
   var selectedCat = null;
@@ -547,8 +547,21 @@
     return b;
   }
 
-  function prodButton(c, ci, p, pi) {
-    var b = document.createElement('div');
+  /* Сохранение названия товара с предупреждением о тёзке в другой категории. */
+  function saveProductName(ci, pi, name) {
+    if (name === null) return;
+    var dup = L.findDuplicateProduct(state.catalog, name, ci, pi);
+    function apply() {
+      L.setProductName(state.catalog, ci, pi, name);
+      save(); render();
+    }
+    if (!dup) { apply(); return; }
+    askConfirm('«' + String(name).trim() + '» уже есть в категории «' +
+      (dup.catName || 'Без категории') + '». Всё равно сохранить?').then(function (ok) {
+      if (ok) apply();
+    });
+  }
+  function prodButton(c, ci, p, pi) {    var b = document.createElement('div');
     b.className = 'btn' + (p.name ? '' : ' empty') + (p.checked ? ' bought' : (p.qty > 0 ? ' has-active' : '')) + (sortMode ? ' sorting' : '');
     var label = document.createElement('div');
     label.className = 'btn-label';
@@ -591,17 +604,13 @@
       if (afterLongPress(b)) return;
       if (!p.name) {
         askText('Название товара:').then(function (name) {
-          if (name === null) return;
-          L.setProductName(state.catalog, ci, pi, name);
-          save(); render();
+          saveProductName(ci, pi, name);
         });
       }
     });
     longPress(b, function () {
       askText('Новое название товара:', p.name, true, true).then(function (name) {
-        if (name === null) return;
-        L.setProductName(state.catalog, ci, pi, name);
-        save(); render();
+        saveProductName(ci, pi, name);
       });
     });
     return b;
@@ -670,8 +679,11 @@
         row.appendChild(cb);
         row.appendChild(nm);
         longPress(row, function () {
-          L.removeFromList(state.catalog, it.catIndex, it.prodIndex);
-          save(); render();
+          askConfirm('Убрать «' + (it.product.name || 'товар') + '» из списка?').then(function (ok) {
+            if (!ok) return;
+            L.removeFromList(state.catalog, it.catIndex, it.prodIndex);
+            save(); render();
+          });
         });
         h.appendChild(row);
       });
@@ -768,8 +780,45 @@
     on('saveSettings', 'click', function () {
       state.settings.repo = el('repoInput').value.trim() || 'russkin/purchases';
       state.settings.token = ensureTokenInput().value.trim();
+      el('gearSettings').classList.remove('open');
       setGear(false);
       save(); render();
+    });
+    /* Репозиторий и токен — только для администратора: сначала предупреждение. */
+    on('repoBtn', 'click', function () {
+      askConfirm('Настройки репозитория и токена — только для администратора. ' +
+        'Неверные значения нарушат синхронизацию на этом устройстве. Открыть?').then(function (ok) {
+        if (!ok) return;
+        el('gearSettings').classList.add('open');
+        ensureTokenInput();
+      });
+    });
+    /* Слепок типовых названий: локальная страховка от случайных очисток. */
+    on('namesSaveBtn', 'click', function () {
+      setGear(false);
+      var snap = L.extractNames(state.catalog);
+      if (window.QLStore.saveNames(snap)) {
+        showInfo('Названия запомнены',
+          'Типовые названия сохранены на этом устройстве (' +
+          new Date(snap.savedAt).toLocaleString() + ').');
+      } else {
+        showInfo('Названия запомнены', 'ОШИБКА: сохранить не удалось (память недоступна).');
+      }
+    });
+    on('namesRestoreBtn', 'click', function () {
+      setGear(false);
+      var snap = window.QLStore.loadNames();
+      if (!snap) {
+        showInfo('Восстановить названия', 'Нет сохранённых названий. Сначала «Запомнить названия».');
+        return;
+      }
+      askConfirm('Восстановить названия от ' + new Date(snap.savedAt).toLocaleString() +
+        '? Заполнятся только пустые кнопки, занятые не тронутся.').then(function (ok) {
+        if (!ok) return;
+        var n = L.applyNames(state.catalog, snap);
+        save(); render();
+        showInfo('Восстановить названия', 'Восстановлено: ' + n + '.');
+      });
     });
     on('clearCache', 'click', function () {
       setGear(false);
