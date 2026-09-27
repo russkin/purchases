@@ -188,4 +188,10 @@ describe('ios: без системных диалогов', () => {
     assert.ok(appSrc.includes('exitSort'), 'нет exitSort');
     assert.ok(appSrc.includes("on('appVerHead', 'click'"), 'тап по версии не выходит из порядка');
   });
+  it('скролл: вход в категорию вверх, выход с возвратом на место', () => {
+    assert.ok(appSrc.includes('openCategory'), 'нет openCategory');
+    assert.ok(appSrc.includes('closeCategory'), 'нет closeCategory');
+    assert.ok(appSrc.includes('savedCatScroll'), 'позиция категорий не запоминается');
+    assert.ok(appSrc.includes('scrollTo(0, 0)'), 'нет мотания вверх');
+  });
 });

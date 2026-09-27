@@ -3,11 +3,26 @@
 
 (function () {
   var LONGPRESS_MS = 3000;
-  var APP_VERSION = 'v60';
+  var APP_VERSION = 'v61';
   var L = window.QLLogic;
   var state = null;
   var selectedCat = null;
   var sortMode = false;
+  var savedCatScroll = 0;
+
+  /* Навигация со скроллом: окно одно, контент подменяется, поэтому
+   * при входе в категорию мотаем вверх, при выходе возвращаем место. */
+  function openCategory(ci) {
+    savedCatScroll = window.scrollY || window.pageYOffset || 0;
+    selectedCat = ci;
+    render();
+    window.scrollTo(0, 0);
+  }
+  function closeCategory() {
+    selectedCat = null;
+    render();
+    window.scrollTo(0, savedCatScroll);
+  }
   var syncStatus = '';
   var lastAction = '';
   var bootError = '';
@@ -519,8 +534,7 @@
           save(); render();
         });
       } else {
-        selectedCat = ci;
-        render();
+        openCategory(ci);
       }
     });
     longPress(b, function () {
@@ -605,7 +619,7 @@
     } else {
       var back = document.createElement('button');
       back.textContent = '← Категории';
-      back.addEventListener('click', function () { selectedCat = null; render(); });
+      back.addEventListener('click', function () { closeCategory(); });
       crumb.appendChild(back);
       var title = document.createElement('span');
       title.textContent = ' ' + (state.catalog.categories[selectedCat].name || 'Категория');
