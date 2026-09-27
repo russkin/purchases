@@ -3,6 +3,10 @@
 Семейное PWA «Быстрый список»: списки покупок (планшет на кухне + телефоны в магазине).
 Репозиторий: `git@github.com:russkin/purchases.git`, ветка `main`.
 Прод: https://russkin.github.io/purchases/ (GitHub Pages, source = GitHub Actions).
+ЖИВЫЕ ДАННЫЕ СЕМЬИ: `kalugin-a/quicklist` (`data/state.json`, ветка `main`) —
+диагностику (файл состояния, `logs/`) смотреть ТАМ, не в russkin/purchases.
+Код по умолчанию смотрит в russkin/purchases (там же живёт хозяин репозитория
+со своим токеном) — это отдельное хозяйство, не трогать. Дефолты в коде не менять.
 Тестовая платформа: планшет HUAWEI MediaPad T3 10 (Android 7), телефоны Android 10+, iPhone 7 (Chrome).
 Текущая версия: v63 (сентябрь 2026). Тестов: 113 (`logic` + `ios` + `sync` + `sync-devices` + `journal`).
 
