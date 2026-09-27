@@ -179,6 +179,7 @@ describe('ios: без системных диалогов', () => {
     assert.ok(appSrc.includes('checkUpdate'), 'нет checkUpdate');
     assert.ok(appSrc.includes('nocache'), 'нет метки nocache');
     assert.ok(appSrc.includes('Вышла новая версия'), 'нет вопроса про обновление');
+    assert.ok(appSrc.includes('pokeSwUpdate'), 'воркер не дёргается при возврате на вкладку');
     const swSrc = fs.readFileSync(path.join(__dirname, '..', 'sw.js'), 'utf8');
     assert.ok(swSrc.includes('nocache'), 'SW не пропускает проверку мимо кэша');
   });

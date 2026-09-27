@@ -3,7 +3,7 @@
 
 (function () {
   var LONGPRESS_MS = 3000;
-  var APP_VERSION = 'v61';
+  var APP_VERSION = 'v62';
   var L = window.QLLogic;
   var state = null;
   var selectedCat = null;
@@ -831,6 +831,7 @@
       L.purgeChecked(state.catalog, Date.now());
       render();
       checkUpdate();
+      pokeSwUpdate();
       var now = Date.now();
       if (state.settings.token && navigator.onLine && now - lastTabSync > 15000) {
         lastTabSync = now;
@@ -867,11 +868,28 @@
    * он активируется сам (skipWaiting) — перезагружаем страницу один раз,
    * чтобы новая версия применилась без кнопки «Очистить кэш». */
   var updateReloaded = false;
+  var swReg = null;
+  var lastSwUpdate = 0;
+  var SW_UPDATE_MS = 5 * 60 * 1000;
+  /* Проверка воркера при возврате на вкладку: иначе фоновая вкладка
+   * никогда не узнаёт о новой версии (update бывает только при загрузке),
+   * а проверка версии смотрит в кэш старого воркера и молчит. */
+  function pokeSwUpdate() {
+    try {
+      if (!swReg || !swReg.update) return;
+      var now = Date.now();
+      if (now - lastSwUpdate < SW_UPDATE_MS) return;
+      lastSwUpdate = now;
+      var p = swReg.update();
+      if (p && p.catch) p.catch(function () {});
+    } catch (e) {}
+  }
   function setupAutoUpdate() {
     try {
       if (!('serviceWorker' in navigator)) return;
       navigator.serviceWorker.register('./sw.js').then(function (reg) {
-        try { if (reg && reg.update) reg.update(); } catch (e) {}
+        swReg = reg;
+        pokeSwUpdate();
       }).catch(function () {});
       navigator.serviceWorker.addEventListener('controllerchange', function () {
         if (updateReloaded) return;
