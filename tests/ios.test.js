@@ -164,6 +164,15 @@ describe('ios: без системных диалогов', () => {
     assert.ok(appSrc.includes('location.href'), 'шарится не ссылка страницы');
     assert.ok(appSrc.includes('shareExternal'), 'нет shareExternal');
   });
+  it('категории и товары: один пункт-подменю на пятерых', () => {
+    const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+    assert.ok(html.includes('id="catMenuBtn"'), 'нет catMenuBtn');
+    assert.ok(html.includes('id="catMenu"'), 'нет catMenu');
+    for (const id of ['sortBtn', 'namesSaveBtn', 'namesRestoreBtn', 'clearList', 'clearAll']) {
+      assert.ok(html.includes('id="' + id + '"'), 'нет ' + id + ' в подменю');
+    }
+    assert.ok(appSrc.includes("on('catMenuBtn'"), 'подменю не переключается');
+  });
   it('режим порядка: кнопка, стрелки, move-логика', () => {
     const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
     assert.ok(html.includes('id="sortBtn"'), 'нет sortBtn в меню');

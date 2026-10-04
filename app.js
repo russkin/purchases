@@ -3,7 +3,7 @@
 
 (function () {
   var LONGPRESS_MS = 3000;
-  var APP_VERSION = 'v66';
+  var APP_VERSION = 'v67';
   var L = window.QLLogic;
   var state = null;
   var selectedCat = null;
@@ -284,6 +284,8 @@
       ensureTokenInput();
     } else {
       m.classList.remove('open');
+      var cm = el('catMenu');
+      if (cm) cm.classList.remove('open');
       var t = el('tokenInput');
       if (t && t.parentNode) t.parentNode.removeChild(t);
     }
@@ -860,6 +862,12 @@
     on('shareAppBtn', 'click', function () {
       setGear(false);
       shareExternal(window.location.href);
+    });
+    /* Подменю «Категории и товары»: раскрывается внутри шестерёнки,
+     * схлопывается при любом закрытии меню (см. setGear). */
+    on('catMenuBtn', 'click', function () {
+      var cm = el('catMenu');
+      if (cm) cm.classList.toggle('open');
     });
     on('sortBtn', 'click', function () {
       sortMode = !sortMode;
