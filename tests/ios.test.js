@@ -172,6 +172,7 @@ describe('ios: без системных диалогов', () => {
       assert.ok(html.includes('id="' + id + '"'), 'нет ' + id + ' в подменю');
     }
     assert.ok(appSrc.includes("on('catMenuBtn'"), 'подменю не переключается');
+    assert.ok(html.includes('#catMenu.open') && html.includes('rgba('), 'у подменю нет подложки');
   });
   it('порядок пунктов меню: как задано пользователем', () => {
     const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
