@@ -173,6 +173,17 @@ describe('ios: без системных диалогов', () => {
     }
     assert.ok(appSrc.includes("on('catMenuBtn'"), 'подменю не переключается');
   });
+  it('порядок пунктов меню: как задано пользователем', () => {
+    const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+    const order = ['shareBtn', 'catMenuBtn', 'shareAppBtn', 'installBtn',
+      'syncNowBtn', 'clearCache', 'repoBtn', 'diagBtn'];
+    let prev = -1;
+    for (const id of order) {
+      const i = html.indexOf('id="' + id + '"');
+      assert.ok(i > prev, 'нарушен порядок меню: ' + id);
+      prev = i;
+    }
+  });
   it('режим порядка: кнопка, стрелки, move-логика', () => {
     const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
     assert.ok(html.includes('id="sortBtn"'), 'нет sortBtn в меню');
