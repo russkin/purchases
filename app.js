@@ -3,7 +3,7 @@
 
 (function () {
   var LONGPRESS_MS = 3000;
-  var APP_VERSION = 'v65';
+  var APP_VERSION = 'v66';
   var L = window.QLLogic;
   var state = null;
   var selectedCat = null;
@@ -856,6 +856,10 @@
     on('shareBtn', 'click', function () {
       setGear(false);
       shareList();
+    });
+    on('shareAppBtn', 'click', function () {
+      setGear(false);
+      shareExternal(window.location.href);
     });
     on('sortBtn', 'click', function () {
       sortMode = !sortMode;

@@ -157,6 +157,13 @@ describe('ios: без системных диалогов', () => {
     assert.ok(appSrc.includes('navigator.share'), 'нет системного шаринга');
     assert.ok(appSrc.includes('clipboard'), 'нет копирования в буфер');
   });
+  it('поделиться приложением: ссылка страницы в системное меню', () => {
+    const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+    assert.ok(html.includes('id="shareAppBtn"'), 'нет shareAppBtn в меню');
+    assert.ok(appSrc.includes("on('shareAppBtn'"), 'нет подписки shareAppBtn');
+    assert.ok(appSrc.includes('location.href'), 'шарится не ссылка страницы');
+    assert.ok(appSrc.includes('shareExternal'), 'нет shareExternal');
+  });
   it('режим порядка: кнопка, стрелки, move-логика', () => {
     const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
     assert.ok(html.includes('id="sortBtn"'), 'нет sortBtn в меню');
