@@ -218,4 +218,8 @@ describe('ios: без системных диалогов', () => {
     assert.ok(appSrc.includes('savedCatScroll'), 'позиция категорий не запоминается');
     assert.ok(appSrc.includes('scrollTo(0, 0)'), 'нет мотания вверх');
   });
+  it('рендер до загрузки состояния не роняет приложение', () => {
+    assert.ok(appSrc.includes('if (!state) return;'), 'render без guard');
+    assert.ok(appSrc.includes("bootError = '';"), 'bootError не сбрасывается после загрузки');
+  });
 });

@@ -3,7 +3,7 @@
 
 (function () {
   var LONGPRESS_MS = 3000;
-  var APP_VERSION = 'v63';
+  var APP_VERSION = 'v64';
   var L = window.QLLogic;
   var state = null;
   var selectedCat = null;
@@ -740,6 +740,9 @@
   }
 
   function render() {
+    /* Сеть может дёрнуться раньше, чем загрузилось состояние (подписки
+     * на online/change висят уже из wire): без guard — ошибка вместо приложения. */
+    if (!state) return;
     var isAdd = state.settings.mode === 'add';
     el('screen-add').style.display = isAdd ? '' : 'none';
     el('screen-list').style.display = isAdd ? 'none' : '';
@@ -898,6 +901,9 @@
     wire();
     window.QLStore.load().then(function (s) {
       state = s;
+      /* Загрузка удалась — стираем ошибки стартовой гонки (рендер до state). */
+      bootError = '';
+      bootStack = '';
       L.purgeChecked(state.catalog, Date.now());
       el('repoInput').value = state.settings.repo || '';
       el('appVer').textContent = 'Версия ' + APP_VERSION;
