@@ -3,7 +3,7 @@
 
 (function () {
   var LONGPRESS_MS = 3000;
-  var APP_VERSION = 'v64';
+  var APP_VERSION = 'v65';
   var L = window.QLLogic;
   var state = null;
   var selectedCat = null;
@@ -164,6 +164,15 @@
       else showInfo('Скопируй вручную', text);
     });
   }
+
+  /* Подтверждение после офлайна: накопленное ушло — сообщаем и жужжим.
+   * Открытый диалог не перекрываем (только вибрация + запись в журнал). */
+  function notifyRestored(syncResult) {
+    try { if (navigator.vibrate) navigator.vibrate(60); } catch (e) {}
+    window.QLJournal.push('sync', 'связь восстановлена, отправлено: ' + syncResult);
+    if (modalResolve) return;
+    showInfo('Связь восстановлена', 'Изменения отправлены на сервер (синк: ' + syncResult + ').');
+  }
   function diagText() {
     var lines = [];
     lines.push('Версия: ' + APP_VERSION);
@@ -281,7 +290,10 @@
   }
 
   var saveError = '';
+  var pendingOffline = false;
+  var wasOffline = false;
   function save() {
+    if (!navigator.onLine) { pendingOffline = true; wasOffline = true; }
     window.QLStore.save(state).then(function (ok) {
       saveError = ok ? '' : 'НЕ СОХРАНЕНО (память браузера недоступна)';
       renderStatus();
@@ -319,6 +331,9 @@
       window.QLJournal.push('sync', syncStatus);
       state = res.state;
       if (res.status === 'error') {
+        // Неотправленное запоминаем; обрыв сети (не github-) — как офлайн-эпизод.
+        pendingOffline = true;
+        if (!navigator.onLine || !/github-/.test(res.error)) wasOffline = true;
         // Сетевые обрывы публиковать бессмысленно — сети нет и для публикации.
         if (/github-/.test(res.error)) maybePublishJournal();
         // Исчерпанные конфликты — молча повторить через 30 сек, без спама статусов.
@@ -328,6 +343,10 @@
       } else {
         errRetryCount = 0;
         if (errRetryTimer) { clearTimeout(errRetryTimer); errRetryTimer = null; }
+        // Накопленное без сети ушло — сообщаем один раз, молчаливые синки не трогаем.
+        if (pendingOffline && wasOffline) notifyRestored(res.status);
+        pendingOffline = false;
+        wasOffline = false;
       }
       return window.QLStore.save(state);
     }).then(finishSync, finishSync);

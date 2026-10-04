@@ -1,4 +1,4 @@
-const CACHE = 'quicklist-v64';
+const CACHE = 'quicklist-v65';
 const ASSETS = [
   './',
   './index.html',

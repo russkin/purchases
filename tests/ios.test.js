@@ -222,4 +222,10 @@ describe('ios: без системных диалогов', () => {
     assert.ok(appSrc.includes('if (!state) return;'), 'render без guard');
     assert.ok(appSrc.includes("bootError = '';"), 'bootError не сбрасывается после загрузки');
   });
+  it('возврат сети: подтверждение отправки + вибрация', () => {
+    assert.ok(appSrc.includes('pendingOffline'), 'нет флага неотправленного');
+    assert.ok(appSrc.includes('notifyRestored'), 'нет notifyRestored');
+    assert.ok(appSrc.includes('Связь восстановлена'), 'нет текста подтверждения');
+    assert.ok(appSrc.includes('vibrate'), 'нет вибрации');
+  });
 });
