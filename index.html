@@ -89,8 +89,8 @@
      * window.open давал две страницы на некоторых браузерах. */
     #gearMenu a { display: block; text-align: left; padding: 12px 14px;
       color: inherit; text-decoration: none; border-bottom: 1px solid #f0f0f0; }
-    .gear-note { padding: 8px 12px 12px; border-top: 1px solid #eee; }
-    .gear-note small { color: #666; }
+    #modalNote { margin: -4px 0 12px; }
+    #modalNote small { color: #666; }
     #catMenu { display: none; background: rgba(74,144,226,.10);
       border-radius: 8px; margin: 2px 6px; }
     #catMenu.open { display: block; }
@@ -122,9 +122,6 @@
     <button id="syncNowBtn">⇅ Синхронизировать</button>
     <button id="clearCache">Очистить кэш</button>
     <button id="repoBtn">🔑 Репозиторий и токен</button>
-    <div class="gear-note"><small>Без токена всё работает локально и офлайн.
-      <a href="./docs/USER_GUIDE.html">Инструкция</a>
-      <span id="appVer"></span></small></div>
     <button id="diagBtn">ⓘ Информация для диагностики</button>
     <a id="versionsBtn" href="./docs/VERSIONS.html" target="_blank" rel="noopener">📋 Информация о версиях</a>
   </div>
@@ -147,6 +144,9 @@
       <input id="modalRepo" placeholder="owner/repo" autocomplete="off" style="display:none" />
       <span id="modalTokenWrap" style="display:none"></span>
       <input id="modalExp" placeholder="Годен до ДД.ММ.ГГГГ" autocomplete="off" inputmode="numeric" maxlength="10" style="display:none" />
+      <div id="modalNote" style="display:none"><small>Без токена всё работает локально и офлайн.
+        <a href="./docs/USER_GUIDE.html">Инструкция</a>
+        <span id="appVer"></span></small></div>
       <div class="row">
         <button id="modalOk">OK</button>
         <button id="modalClear" style="display:none">Очистить</button>

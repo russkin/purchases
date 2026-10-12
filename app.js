@@ -3,7 +3,7 @@
 
 (function () {
   var LONGPRESS_MS = 3000;
-  var APP_VERSION = 'v75';
+  var APP_VERSION = 'v76';
   var L = window.QLLogic;
   var state = null;
   var selectedCat = null;
@@ -96,6 +96,7 @@
     hideId('modalRepo');
     hideId('modalExp');
     hideId('modalTokenWrap');
+    hideId('modalNote');
     var ti = el('tokenInput');
     if (ti && ti.parentNode) ti.parentNode.removeChild(ti);
     var r = modalResolve;
@@ -145,6 +146,7 @@
     x.value = state.settings.tokenExp || '';
     el('modalTokenWrap').style.display = '';
     ensureTokenInput('modalTokenWrap');
+    el('modalNote').style.display = '';
     el('modalOk').textContent = 'Сохранить';
     el('modalClear').style.display = 'none';
     el('modalCancel').style.display = '';
@@ -227,7 +229,8 @@
     lines.push('Категорий: ' + state.catalog.categories.length);
     lines.push('Выбрана: ' + selectedCat);
     lines.push('Активных: ' + L.activeCount(state.catalog));
-    lines.push('updatedAt: ' + state.updatedAt);
+    lines.push('Репозиторий: ' + (state.settings.repo || '—'));
+    lines.push('Обновлено: ' + new Date(state.updatedAt).toLocaleString() + ' (' + state.updatedAt + ')');
     lines.push('Синк: ' + (syncStatus || (state.settings.token ? '—' : 'выключен (нет ключа)')));
     if (state.settings.token && state.settings.tokenExp) {
       var tLeft = L.tokenDaysLeft(state.settings.tokenExp, Date.now());

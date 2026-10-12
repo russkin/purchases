@@ -242,6 +242,13 @@ describe('ios: без системных диалогов', () => {
     assert.ok(appSrc.includes('openSettings'), 'нет openSettings');
     assert.ok(appSrc.includes('администратора'), 'нет предупреждения');
     assert.ok(appSrc.includes('Открыть?'), 'нет вопроса при входе в настройки');
+    assert.ok(html.includes('id="modalNote"'), 'примечание не в модалке');
+    assert.ok(!html.includes('gear-note'), 'примечание осталось в меню');
+  });
+  it('диагностика: репозиторий и читаемое время вместо updatedAt', () => {
+    assert.ok(appSrc.includes("'Репозиторий: '"), 'нет репозитория в диагностике');
+    assert.ok(appSrc.includes("'Обновлено: '"), 'нет читаемого времени');
+    assert.ok(!appSrc.includes("'updatedAt: '"), 'остался сырой updatedAt');
   });
   it('срок токена: поле, пороги 7/3, окно раз в сутки, хинт 401', () => {
     assert.ok(appSrc.includes('tokenWarnLevel'), 'нет tokenWarnLevel');
