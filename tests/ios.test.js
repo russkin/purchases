@@ -241,6 +241,7 @@ describe('ios: без системных диалогов', () => {
     assert.ok(appSrc.includes('askSettings'), 'нет askSettings');
     assert.ok(appSrc.includes('openSettings'), 'нет openSettings');
     assert.ok(appSrc.includes('администратора'), 'нет предупреждения');
+    assert.ok(appSrc.includes('Открыть?'), 'нет вопроса при входе в настройки');
   });
   it('срок токена: поле, пороги 7/3, окно раз в сутки, хинт 401', () => {
     assert.ok(appSrc.includes('tokenWarnLevel'), 'нет tokenWarnLevel');

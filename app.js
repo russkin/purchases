@@ -3,7 +3,7 @@
 
 (function () {
   var LONGPRESS_MS = 3000;
-  var APP_VERSION = 'v73';
+  var APP_VERSION = 'v74';
   var L = window.QLLogic;
   var state = null;
   var selectedCat = null;
@@ -135,8 +135,7 @@
   /* Настройки репозитория и токена модалкой: Отмена/Сохранить.
    * Поле токена создаётся только на время окна (см. ensureTokenInput). */
   function askSettings() {
-    el('modalText').textContent = 'Репозиторий и токен — только для администратора. ' +
-      'Неверные значения нарушат синхронизацию на этом устройстве.';
+    el('modalText').textContent = 'Репозиторий и токен:';
     el('modalInput').style.display = 'none';
     var r = el('modalRepo');
     var x = el('modalExp');
@@ -914,9 +913,13 @@
         save(); render();
       });
     });
-    /* Репозиторий и токен — только для администратора (модалка с предупреждением). */
+    /* Репозиторий и токен — только для администратора: сначала предупреждение,
+     * затем модальное окно (как в external-brain). */
     on('repoBtn', 'click', function () {
-      openSettings();
+      askConfirm('Настройки репозитория и токена — только для администратора. ' +
+        'Неверные значения нарушат синхронизацию на этом устройстве. Открыть?').then(function (ok) {
+        if (ok) openSettings();
+      });
     });
     /* Слепок типовых названий: локальная страховка от случайных очисток. */
     on('namesSaveBtn', 'click', function () {
