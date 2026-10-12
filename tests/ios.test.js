@@ -283,9 +283,12 @@ describe('ios: без системных диалогов', () => {
   it('инструкция — пункт меню, а не модалка настроек', () => {
     const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
     assert.ok(html.includes('id="guideBtn"'), 'нет guideBtn в меню');
+    assert.ok(html.includes('Инструкция пользователя'), 'пункт не переименован');
     assert.ok(html.includes('./docs/USER_GUIDE.html'), 'пункт не ведёт на инструкцию');
     const note = html.match(/id="modalNote"[\s\S]*?<\/div>/);
     assert.ok(note && !note[0].includes('Инструкция'), 'ссылка осталась в модалке');
+    const guide = fs.readFileSync(path.join(__dirname, '..', 'docs/USER_GUIDE.html'), 'utf8');
+    assert.ok(guide.includes('id="guideClose"'), 'нет кнопки закрыть в инструкции');
   });
   it('удаление из корзины: подтверждение', () => {
     assert.ok(appSrc.includes('Убрать «'), 'нет вопроса перед удалением');

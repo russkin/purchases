@@ -4,9 +4,27 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Инструкция — Быстрый список</title>
-<style>body{font-family:system-ui,sans-serif;max-width:640px;margin:0 auto;padding:24px;line-height:1.5}</style>
+<style>body{font-family:system-ui,sans-serif;max-width:640px;margin:0 auto;padding:24px;line-height:1.5}
+#guideBar { position: -webkit-sticky; position: sticky; top: 0; background: #fff; padding: 8px 0;
+  border-bottom: 1px solid #eee; z-index: 5; }
+#guideClose { font-size: 16px; padding: 8px 16px; cursor: pointer; }</style>
 </head>
 <body>
+<div id="guideBar"><button id="guideClose" type="button">✕ Закрыть</button></div>
+<script>
+/* Закрытие: как в истории версий — вкладка, иначе назад, иначе на главную. */
+document.getElementById('guideClose').addEventListener('click', function () {
+  try { window.close(); } catch (e) {}
+  setTimeout(function () {
+    try {
+      if (window.history && window.history.length > 1) window.history.back();
+      else window.location.href = '../';
+    } catch (e) {
+      try { window.location.href = '../'; } catch (e2) {}
+    }
+  }, 150);
+});
+</script>
 <h1>Инструкция пользователя «Быстрый список»</h1>
 <h2>Установка</h2>
 <ol>
