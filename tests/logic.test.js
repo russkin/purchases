@@ -340,6 +340,14 @@ describe('срок токена (tokenExp)', () => {
     assert.equal(L.maskDateExp('01-10-2026 extra'), '01.10.2026');
     assert.equal(L.maskDateExp('0110202699'), '01.10.2026');
   });
+  it('maskDateExp: точка сразу после готовой группы, при стирании — нет', () => {
+    assert.equal(L.maskDateExp('01', true), '01.');
+    assert.equal(L.maskDateExp('0110', true), '01.10.');
+    assert.equal(L.maskDateExp('011', true), '01.1');
+    assert.equal(L.maskDateExp('01102026', true), '01.10.2026');
+    assert.equal(L.maskDateExp('01', false), '01');
+    assert.equal(L.maskDateExp('0110', false), '01.10');
+  });
 });
 describe('ручной порядок: moveCategory/moveProduct', () => {
   it('обмен соседей двигает и ставит свежие ts', () => {

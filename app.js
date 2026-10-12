@@ -3,7 +3,7 @@
 
 (function () {
   var LONGPRESS_MS = 3000;
-  var APP_VERSION = 'v71';
+  var APP_VERSION = 'v72';
   var L = window.QLLogic;
   var state = null;
   var selectedCat = null;
@@ -273,13 +273,16 @@
         shareExternal(t);
       } else closeModal('');
     });
-    /* Маска даты «Годен до»: точки расставляются сами по мере ввода. */
-    on('modalExp', 'input', function () {
+    /* Маска даты «Годен до»: точки расставляются сами по мере ввода.
+     * Точка — сразу после готовой группы; при стирании не прилипает обратно. */
+    on('modalExp', 'input', function (e) {
       var x = el('modalExp');
-      var v = L.maskDateExp(x.value);
+      var ins = true;
+      try { ins = !e || !e.inputType || e.inputType.indexOf('delete') !== 0; } catch (err) {}
+      var v = L.maskDateExp(x.value, ins);
       if (v !== x.value) {
         x.value = v;
-        try { x.setSelectionRange(v.length, v.length); } catch (e) {}
+        try { x.setSelectionRange(v.length, v.length); } catch (err2) {}
       }
     });
   }

@@ -362,12 +362,16 @@ function tokenWarnLevel(exp, nowMs) {
 }
 
 /* Маска ввода даты срока токена: только цифры, точки расставляются сами
- * по мере ввода (ДД.ММ.ГГГГ), лишнее отрезается. */
-function maskDateExp(s) {
+ * по мере ввода (ДД.ММ.ГГГГ), лишнее отрезается. Если trail задан и группа
+ * только что допечатана («01», «01.10») — точка ставится сразу, ждать следующую
+ * цифру не надо. При стирании хвост не прилипает обратно. */
+function maskDateExp(s, trail) {
   var d = String(s == null ? '' : s).replace(/[^0-9]/g, '').slice(0, 8);
   var out = d.slice(0, 2);
   if (d.length > 2) out += '.' + d.slice(2, 4);
+  else if (d.length === 2 && trail) out += '.';
   if (d.length > 4) out += '.' + d.slice(4, 8);
+  else if (d.length === 4 && trail) out += '.';
   return out;
 }
 
