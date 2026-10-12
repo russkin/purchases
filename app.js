@@ -3,7 +3,7 @@
 
 (function () {
   var LONGPRESS_MS = 3000;
-  var APP_VERSION = 'v72';
+  var APP_VERSION = 'v73';
   var L = window.QLLogic;
   var state = null;
   var selectedCat = null;
@@ -250,9 +250,13 @@
   function wireModal() {
     on('modalOk', 'click', function () {
       if (modalMode === 'settings') {
+        /* Поля токена уже нет в DOM (меню закрылось под окном) —
+         * сохранять нечего: выходим без записи, а не трём ключ пустотой. */
+        var ti = el('tokenInput');
+        if (!ti) { closeModal(null); return; }
         var vals = {
           repo: el('modalRepo').value.trim(),
-          token: (function () { var t = el('tokenInput'); return t ? t.value.trim() : ''; })(),
+          token: ti.value.trim(),
           exp: el('modalExp').value
         };
         closeModal(vals);
@@ -990,7 +994,9 @@
     });
     document.addEventListener('click', function (e) {
       var m = el('gearMenu');
-      if (m.classList.contains('open') && !m.contains(e.target)) setGear(false);
+      var mb = el('modalBack');
+      var modalOpen = mb && mb.classList.contains('open');
+      if (m.classList.contains('open') && !m.contains(e.target) && !modalOpen) setGear(false);
     });
     window.addEventListener('online', function () {
       render();

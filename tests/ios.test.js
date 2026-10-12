@@ -258,6 +258,10 @@ describe('ios: без системных диалогов', () => {
     assert.ok(/id="modalExp"[^>]*inputmode="numeric"/.test(html), 'нет цифровой клавиатуры');
     assert.ok(appSrc.includes('maskDateExp'), 'маска не подключена');
   });
+  it('сохранение настроек без поля токена — отмена, а не затирание', () => {
+    assert.ok(appSrc.includes('if (!ti) { closeModal(null); return; }'), 'нет защиты от потери поля');
+    assert.ok(appSrc.includes('modalOpen'), 'меню закрывается под модалкой');
+  });
   it('удаление из корзины: подтверждение', () => {
     assert.ok(appSrc.includes('Убрать «'), 'нет вопроса перед удалением');
     assert.ok(appSrc.includes('removeFromList'), 'нет removeFromList');
