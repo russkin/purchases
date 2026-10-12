@@ -252,6 +252,12 @@ describe('ios: без системных диалогов', () => {
     assert.ok(appSrc.includes('Ключ: до '), 'нет срока в диагностике');
     assert.ok(appSrc.includes('токен истёк или отозван'), 'нет хинта про 401');
   });
+  it('маска даты срока: точки сами, только цифры', () => {
+    const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+    assert.ok(/id="modalExp"[^>]*maxlength="10"/.test(html), 'нет лимита 10 символов');
+    assert.ok(/id="modalExp"[^>]*inputmode="numeric"/.test(html), 'нет цифровой клавиатуры');
+    assert.ok(appSrc.includes('maskDateExp'), 'маска не подключена');
+  });
   it('удаление из корзины: подтверждение', () => {
     assert.ok(appSrc.includes('Убрать «'), 'нет вопроса перед удалением');
     assert.ok(appSrc.includes('removeFromList'), 'нет removeFromList');

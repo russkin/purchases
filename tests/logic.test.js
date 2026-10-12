@@ -328,6 +328,18 @@ describe('срок токена (tokenExp)', () => {
     assert.equal(L.tokenWarnLevel('23.09.2026', NOW), 2);
     assert.equal(L.tokenWarnLevel('', NOW), 0);
   });
+  it('maskDateExp: только цифры, точки сами', () => {
+    assert.equal(L.maskDateExp(''), '');
+    assert.equal(L.maskDateExp('0'), '0');
+    assert.equal(L.maskDateExp('01'), '01');
+    assert.equal(L.maskDateExp('011'), '01.1');
+    assert.equal(L.maskDateExp('0110'), '01.10');
+    assert.equal(L.maskDateExp('01102'), '01.10.2');
+    assert.equal(L.maskDateExp('01102026'), '01.10.2026');
+    assert.equal(L.maskDateExp('01.10.2026'), '01.10.2026');
+    assert.equal(L.maskDateExp('01-10-2026 extra'), '01.10.2026');
+    assert.equal(L.maskDateExp('0110202699'), '01.10.2026');
+  });
 });
 describe('ручной порядок: moveCategory/moveProduct', () => {
   it('обмен соседей двигает и ставит свежие ts', () => {

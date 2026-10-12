@@ -361,6 +361,16 @@ function tokenWarnLevel(exp, nowMs) {
   return 0;
 }
 
+/* Маска ввода даты срока токена: только цифры, точки расставляются сами
+ * по мере ввода (ДД.ММ.ГГГГ), лишнее отрезается. */
+function maskDateExp(s) {
+  var d = String(s == null ? '' : s).replace(/[^0-9]/g, '').slice(0, 8);
+  var out = d.slice(0, 2);
+  if (d.length > 2) out += '.' + d.slice(2, 4);
+  if (d.length > 4) out += '.' + d.slice(4, 8);
+  return out;
+}
+
 /* --- Нормализация (защита от битых данных старых версий/синка) --- */
 
 function normalizeProduct(p) {
@@ -503,6 +513,7 @@ var api = {
   normTokenExp: normTokenExp,
   tokenDaysLeft: tokenDaysLeft,
   tokenWarnLevel: tokenWarnLevel,
+  maskDateExp: maskDateExp,
   isCatalogEmpty: isCatalogEmpty,
   mergeDecision: mergeDecision,
   normalizeProduct: normalizeProduct,

@@ -3,7 +3,7 @@
 
 (function () {
   var LONGPRESS_MS = 3000;
-  var APP_VERSION = 'v70';
+  var APP_VERSION = 'v71';
   var L = window.QLLogic;
   var state = null;
   var selectedCat = null;
@@ -272,6 +272,15 @@
         closeModal(true);
         shareExternal(t);
       } else closeModal('');
+    });
+    /* Маска даты «Годен до»: точки расставляются сами по мере ввода. */
+    on('modalExp', 'input', function () {
+      var x = el('modalExp');
+      var v = L.maskDateExp(x.value);
+      if (v !== x.value) {
+        x.value = v;
+        try { x.setSelectionRange(v.length, v.length); } catch (e) {}
+      }
     });
   }
 
