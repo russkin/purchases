@@ -36,6 +36,7 @@ jobs:
           cp index.html app.js store.js sync.js journal.js manifest.webmanifest sw.js icon.svg icon-192.png icon-512.png README.md _site/
           cp src/logic.js _site/src/logic.js
           cp docs/USER_GUIDE.html _site/docs/USER_GUIDE.html
+          cp docs/VERSIONS.html _site/docs/VERSIONS.html
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

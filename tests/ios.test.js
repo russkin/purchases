@@ -263,6 +263,16 @@ describe('ios: без системных диалогов', () => {
     assert.ok(appSrc.includes('if (!ti) { closeModal(null); return; }'), 'нет защиты от потери поля');
     assert.ok(appSrc.includes('modalOpen'), 'меню закрывается под модалкой');
   });
+  it('история версий: страница, пункт меню, текущая версия наверху', () => {
+    const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+    assert.ok(html.includes('id="versionsBtn"'), 'нет versionsBtn в меню');
+    assert.ok(html.includes('./docs/VERSIONS.html'), 'пункт не ведёт на страницу версий');
+    const versions = fs.readFileSync(path.join(__dirname, '..', 'docs/VERSIONS.html'), 'utf8');
+    assert.ok(versions.includes('id="guideClose"'), 'нет кнопки закрыть');
+    const m = appSrc.match(/APP_VERSION = '(v\d+)'/);
+    assert.ok(m, 'нет APP_VERSION');
+    assert.ok(versions.includes('<b>' + m[1] + '</b>'), 'текущей версии нет наверху истории');
+  });
   it('удаление из корзины: подтверждение', () => {
     assert.ok(appSrc.includes('Убрать «'), 'нет вопроса перед удалением');
     assert.ok(appSrc.includes('removeFromList'), 'нет removeFromList');

@@ -85,6 +85,10 @@
     #gearMenu button { display: block; width: 100%; text-align: left; background: none;
       border: none; border-bottom: 1px solid #f0f0f0; padding: 12px 14px; }
     #gearMenu button:last-child { border-bottom: none; }
+    /* Пункт-ссылка (история версий): как кнопка меню, но нативный переход —
+     * window.open давал две страницы на некоторых браузерах. */
+    #gearMenu a { display: block; text-align: left; padding: 12px 14px;
+      color: inherit; text-decoration: none; border-bottom: 1px solid #f0f0f0; }
     .gear-note { padding: 8px 12px 12px; border-top: 1px solid #eee; }
     .gear-note small { color: #666; }
     #catMenu { display: none; background: rgba(74,144,226,.10);
@@ -122,6 +126,7 @@
       <a href="./docs/USER_GUIDE.html">Инструкция</a>
       <span id="appVer"></span></small></div>
     <button id="diagBtn">ⓘ Информация для диагностики</button>
+    <a id="versionsBtn" href="./docs/VERSIONS.html" target="_blank" rel="noopener">📋 Информация о версиях</a>
   </div>
 
   <main id="screen-add">

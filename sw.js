@@ -1,4 +1,4 @@
-const CACHE = 'quicklist-v74';
+const CACHE = 'quicklist-v75';
 const ASSETS = [
   './',
   './index.html',
@@ -11,7 +11,8 @@ const ASSETS = [
   './icon.svg',
   './icon-192.png',
   './icon-512.png',
-  './docs/USER_GUIDE.html'
+  './docs/USER_GUIDE.html',
+  './docs/VERSIONS.html'
 ];
 
 self.addEventListener('install', (e) => {
