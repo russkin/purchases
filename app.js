@@ -3,7 +3,7 @@
 
 (function () {
   var LONGPRESS_MS = 3000;
-  var APP_VERSION = 'v69';
+  var APP_VERSION = 'v70';
   var L = window.QLLogic;
   var state = null;
   var selectedCat = null;
@@ -82,12 +82,22 @@
    * обработчиков (таймер лонгпресса) блокируется, поэтому своё модальное окно. */
   var modalResolve = null;
   var modalShareText = null;
+  var modalMode = '';
+  function hideId(id) {
+    try { var n = el(id); if (n) n.style.display = 'none'; } catch (e) {}
+  }
   function closeModal(value) {
     el('modalBack').classList.remove('open');
     el('modalCancel').style.display = '';
     el('modalClear').style.display = 'none';
     el('modalClear').textContent = 'Очистить';
     modalShareText = null;
+    modalMode = '';
+    hideId('modalRepo');
+    hideId('modalExp');
+    hideId('modalTokenWrap');
+    var ti = el('tokenInput');
+    if (ti && ti.parentNode) ti.parentNode.removeChild(ti);
     var r = modalResolve;
     modalResolve = null;
     if (r) r(value);
@@ -120,6 +130,42 @@
     el('modalCancel').style.display = 'none';
     el('modalBack').classList.add('open');
     return new Promise(function (resolve) { modalResolve = resolve; });
+  }
+
+  /* Настройки репозитория и токена модалкой: Отмена/Сохранить.
+   * Поле токена создаётся только на время окна (см. ensureTokenInput). */
+  function askSettings() {
+    el('modalText').textContent = 'Репозиторий и токен — только для администратора. ' +
+      'Неверные значения нарушат синхронизацию на этом устройстве.';
+    el('modalInput').style.display = 'none';
+    var r = el('modalRepo');
+    var x = el('modalExp');
+    r.style.display = '';
+    r.value = state.settings.repo || '';
+    x.style.display = '';
+    x.value = state.settings.tokenExp || '';
+    el('modalTokenWrap').style.display = '';
+    ensureTokenInput('modalTokenWrap');
+    el('modalOk').textContent = 'Сохранить';
+    el('modalClear').style.display = 'none';
+    el('modalCancel').style.display = '';
+    el('modalBack').classList.add('open');
+    modalMode = 'settings';
+    return new Promise(function (resolve) { modalResolve = resolve; });
+  }
+  function openSettings() {
+    if (!el('modalRepo') || !el('modalExp') || !el('modalTokenWrap')) {
+      showInfo('Настройки', 'Разметка устарела — обновите приложение и попробуйте снова.');
+      return;
+    }
+    askSettings().then(function (vals) {
+      if (!vals) return;
+      state.settings.repo = vals.repo || 'russkin/purchases';
+      state.settings.token = vals.token;
+      state.settings.tokenExp = L.normTokenExp(vals.exp);
+      setGear(false);
+      save(); render();
+    });
   }
 
   /* Поделиться списком: системное меню (телефоны), иначе — копирование
@@ -184,6 +230,11 @@
     lines.push('Активных: ' + L.activeCount(state.catalog));
     lines.push('updatedAt: ' + state.updatedAt);
     lines.push('Синк: ' + (syncStatus || (state.settings.token ? '—' : 'выключен (нет ключа)')));
+    if (state.settings.token && state.settings.tokenExp) {
+      var tLeft = L.tokenDaysLeft(state.settings.tokenExp, Date.now());
+      lines.push('Ключ: до ' + state.settings.tokenExp +
+        (tLeft < 0 ? ' — срок вышел!' : ' (осталось ' + tLeft + ' дн.)'));
+    }
     lines.push('Действие: ' + (lastAction || '—'));
     lines.push('Ошибка: ' + (bootError || 'нет'));
     if (bootStack) lines.push('Стек:\n' + bootStack);
@@ -198,6 +249,15 @@
   }
   function wireModal() {
     on('modalOk', 'click', function () {
+      if (modalMode === 'settings') {
+        var vals = {
+          repo: el('modalRepo').value.trim(),
+          token: (function () { var t = el('tokenInput'); return t ? t.value.trim() : ''; })(),
+          exp: el('modalExp').value
+        };
+        closeModal(vals);
+        return;
+      }
       var input = el('modalInput');
       if (input.style.display === 'none') closeModal(true);
       else closeModal(input.value);
@@ -260,7 +320,7 @@
    * «текст + type=password» как форму входа и предлагает сохранить токен при
    * любом вводе (autocomplete он игнорирует). Без поля в разметке бабла нет.
    * Источник правды — state.settings.token, поле лишь показывает его. */
-  function ensureTokenInput() {
+  function ensureTokenInput(wrap) {
     var input = el('tokenInput');
     if (input) return input;
     input = document.createElement('input');
@@ -273,7 +333,7 @@
     input.addEventListener('focus', function () {
       input.removeAttribute('readonly');
     });
-    var w = el('tokenWrap');
+    var w = el(wrap || 'tokenWrap');
     if (w) w.appendChild(input);
     return input;
   }
@@ -281,7 +341,6 @@
     var m = el('gearMenu');
     if (open) {
       m.classList.add('open');
-      ensureTokenInput();
     } else {
       m.classList.remove('open');
       var cm = el('catMenu');
@@ -329,7 +388,11 @@
     syncStatus = 'синхронизация…';
     renderStatus();
     window.QLSync.syncNow(state).then(function (res) {
-      syncStatus = res.status === 'error' ? ('ошибка синка: ' + res.error) : ('синк: ' + res.status);
+      var errText = res.error;
+      if (res.status === 'error' && /401/.test(res.error)) {
+        errText += ' (похоже, токен истёк или отозван — проверь срок в настройках)';
+      }
+      syncStatus = res.status === 'error' ? ('ошибка синка: ' + errText) : ('синк: ' + res.status);
       window.QLJournal.push('sync', syncStatus);
       state = res.state;
       if (res.status === 'error') {
@@ -446,6 +509,31 @@
       window.QLSync.publishFile(state.settings.repo, state.settings.token, logFileName(), body)
         .then(function (st) { window.QLJournal.push('log', String(st)); renderStatus(); })
         .catch(function () {});
+    } catch (e) {}
+  }
+
+  /* Разовое предупреждение о сроке токена: уровень 2 (3 дня и меньше,
+   * включая истёкший) — окно не чаще раза в сутки. Уровень 1 — только строка. */
+  function tokenWarnDay() {
+    var d = new Date();
+    return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate();
+  }
+  function maybeWarnTokenExp() {
+    try {
+      if (!state || !state.settings.token || modalResolve) return;
+      if (L.tokenWarnLevel(state.settings.tokenExp, Date.now()) < 2) return;
+      var today = tokenWarnDay();
+      var shown = '';
+      try { shown = window.localStorage.getItem('quicklist-tokenwarn-v1') || ''; } catch (e) {}
+      if (shown === today) return;
+      try { window.localStorage.setItem('quicklist-tokenwarn-v1', today); } catch (e) {}
+      var left = L.tokenDaysLeft(state.settings.tokenExp, Date.now());
+      var msg = left < 0
+        ? 'Срок токена вышел ' + state.settings.tokenExp + '. Синк встал — список живёт только в этом устройстве. Продлить сейчас?'
+        : 'До конца срока токена осталось ' + left + ' дн. (' + state.settings.tokenExp + '). Без нового токена синк встанет. Продлить сейчас?';
+      askConfirm(msg).then(function (ok) {
+        if (ok) openSettings();
+      });
     } catch (e) {}
   }
 
@@ -720,6 +808,15 @@
     if (lastAction) parts.push(lastAction);
     if (saveError) parts.push(saveError);
     if (syncStatus) parts.push(syncStatus);
+    if (state && state.settings.token && state.settings.tokenExp) {
+      var tokLvl = L.tokenWarnLevel(state.settings.tokenExp, Date.now());
+      if (tokLvl === 1) parts.push('Токен до ' + state.settings.tokenExp);
+      else if (tokLvl === 2) {
+        var tokLeft = L.tokenDaysLeft(state.settings.tokenExp, Date.now());
+        parts.push(tokLeft < 0 ? 'Токен истёк ' + state.settings.tokenExp + ' — синк встал'
+          : 'Токен истекает! Осталось ' + tokLeft + ' дн.');
+      }
+    }
     if (bootError) parts.push(bootError);
     el('status').textContent = parts.join(' · ');
     var net = el('netStatus');
@@ -801,21 +898,9 @@
         save(); render();
       });
     });
-    on('saveSettings', 'click', function () {
-      state.settings.repo = el('repoInput').value.trim() || 'russkin/purchases';
-      state.settings.token = ensureTokenInput().value.trim();
-      el('gearSettings').classList.remove('open');
-      setGear(false);
-      save(); render();
-    });
-    /* Репозиторий и токен — только для администратора: сначала предупреждение. */
+    /* Репозиторий и токен — только для администратора (модалка с предупреждением). */
     on('repoBtn', 'click', function () {
-      askConfirm('Настройки репозитория и токена — только для администратора. ' +
-        'Неверные значения нарушат синхронизацию на этом устройстве. Открыть?').then(function (ok) {
-        if (!ok) return;
-        el('gearSettings').classList.add('open');
-        ensureTokenInput();
-      });
+      openSettings();
     });
     /* Слепок типовых названий: локальная страховка от случайных очисток. */
     on('namesSaveBtn', 'click', function () {
@@ -915,6 +1000,7 @@
       render();
       checkUpdate();
       pokeSwUpdate();
+      maybeWarnTokenExp();
       var now = Date.now();
       if (state.settings.token && navigator.onLine && now - lastTabSync > 15000) {
         lastTabSync = now;
@@ -936,7 +1022,6 @@
       bootError = '';
       bootStack = '';
       L.purgeChecked(state.catalog, Date.now());
-      el('repoInput').value = state.settings.repo || '';
       el('appVer').textContent = 'Версия ' + APP_VERSION;
       el('appVerHead').textContent = APP_VERSION;
       render();
@@ -945,6 +1030,7 @@
       setupAutoUpdate();
       setupPolling();
       checkUpdate();
+      maybeWarnTokenExp();
       /* Автоподтягивание общего списка при открытии (ручной пункт в ⚙ не обязателен). */
       if (state.settings.token && navigator.onLine) doSync();
     });

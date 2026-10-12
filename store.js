@@ -106,6 +106,11 @@
       state.catalog = window.QLLogic.normalizeCatalog(state.catalog);
     }
     if (!state.settings) state.settings = { mode: 'add', repo: 'russkin/purchases', token: '' };
+    /* Срок токена — только локально (в синк не едет); битый чистим. */
+    if (state.settings.tokenExp == null) state.settings.tokenExp = '';
+    else if (window.QLLogic && window.QLLogic.normTokenExp) {
+      state.settings.tokenExp = window.QLLogic.normTokenExp(state.settings.tokenExp);
+    }
     if (!state.updatedAt) state.updatedAt = Date.now();
     return state;
   }

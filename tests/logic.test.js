@@ -304,6 +304,31 @@ describe('shareText: текстовый список', () => {
     assert.equal(L.shareText(L.blankCatalog()), '');
   });
 });
+describe('срок токена (tokenExp)', () => {
+  const NOW = Date.UTC(2026, 8, 24, 12, 0, 0);
+  it('normTokenExp: ДД.ММ.ГГГГ, ISO приводится, битое — пусто', () => {
+    assert.equal(L.normTokenExp('01.10.2026'), '01.10.2026');
+    assert.equal(L.normTokenExp('2026-10-01'), '01.10.2026');
+    assert.equal(L.normTokenExp('32.01.2026'), '');
+    assert.equal(L.normTokenExp('31.02.2026'), '');
+    assert.equal(L.normTokenExp('мусор'), '');
+    assert.equal(L.normTokenExp(''), '');
+    assert.equal(L.normTokenExp(null), '');
+  });
+  it('tokenDaysLeft: по UTC-полуночам', () => {
+    assert.equal(L.tokenDaysLeft('24.09.2026', NOW), 0);
+    assert.equal(L.tokenDaysLeft('25.09.2026', NOW), 1);
+    assert.equal(L.tokenDaysLeft('23.09.2026', NOW), -1);
+    assert.equal(L.tokenDaysLeft('', NOW), 9999);
+  });
+  it('tokenWarnLevel: тихо / за 7 / за 3 и после срока', () => {
+    assert.equal(L.tokenWarnLevel('02.10.2026', NOW), 0);
+    assert.equal(L.tokenWarnLevel('28.09.2026', NOW), 1);
+    assert.equal(L.tokenWarnLevel('26.09.2026', NOW), 2);
+    assert.equal(L.tokenWarnLevel('23.09.2026', NOW), 2);
+    assert.equal(L.tokenWarnLevel('', NOW), 0);
+  });
+});
 describe('ручной порядок: moveCategory/moveProduct', () => {
   it('обмен соседей двигает и ставит свежие ts', () => {
     const c = L.blankCatalog();

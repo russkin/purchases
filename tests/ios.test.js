@@ -136,10 +136,11 @@ describe('ios: без системных диалогов', () => {
     assert.ok(appSrc.includes('На экран'), 'нет подсказки ручной установки для iPhone');
     assert.ok(appSrc.includes('display-mode: standalone'), 'кнопка не прячется в установленном приложении');
   });
-  it('пароля нет в DOM: поле токена живёт только при открытых настройках', () => {
+  it('пароля нет в DOM: поле токена живёт только при открытом окне', () => {
     const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
     assert.ok(!html.includes('id="tokenInput"'), 'статичное поле токена в разметке');
-    assert.ok(html.includes('id="tokenWrap"'), 'нет tokenWrap');
+    assert.ok(html.includes('id="modalTokenWrap"'), 'нет modalTokenWrap');
+    assert.ok(!html.includes('id="tokenWrap"'), 'остался tokenWrap настроек');
     assert.ok(appSrc.includes('ensureTokenInput'), 'нет ensureTokenInput');
     assert.ok(appSrc.includes("input.type = 'password'"), 'поле не password');
     assert.ok(appSrc.includes('autocomplete') && appSrc.includes('new-password'), 'нет new-password');
@@ -230,11 +231,26 @@ describe('ios: без системных диалогов', () => {
     assert.ok(appSrc.includes('applyNames'), 'нет applyNames');
     assert.ok(appSrc.includes('saveNames') && appSrc.includes('loadNames'), 'слепок не хранится');
   });
-  it('репозиторий в подменю для администратора', () => {
+  it('репозиторий и токен — модалка с Отменой и Сохранить', () => {
     const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
     assert.ok(html.includes('id="repoBtn"'), 'нет repoBtn');
-    assert.ok(html.includes('id="gearSettings"'), 'нет gearSettings');
+    assert.ok(!html.includes('id="gearSettings"'), 'остался блок gearSettings');
+    assert.ok(!html.includes('id="saveSettings"'), 'осталась кнопка saveSettings');
+    assert.ok(html.includes('id="modalRepo"'), 'нет modalRepo');
+    assert.ok(html.includes('id="modalExp"'), 'нет modalExp');
+    assert.ok(appSrc.includes('askSettings'), 'нет askSettings');
+    assert.ok(appSrc.includes('openSettings'), 'нет openSettings');
     assert.ok(appSrc.includes('администратора'), 'нет предупреждения');
+  });
+  it('срок токена: поле, пороги 7/3, окно раз в сутки, хинт 401', () => {
+    assert.ok(appSrc.includes('tokenWarnLevel'), 'нет tokenWarnLevel');
+    assert.ok(appSrc.includes('tokenDaysLeft'), 'нет tokenDaysLeft');
+    assert.ok(appSrc.includes('normTokenExp'), 'нет normTokenExp');
+    assert.ok(appSrc.includes('Токен истекает!') && appSrc.includes('Токен истёк'), 'нет строк статуса');
+    assert.ok(appSrc.includes('maybeWarnTokenExp'), 'нет разового окна о сроке');
+    assert.ok(appSrc.includes('quicklist-tokenwarn-v1'), 'окно не троттлится сутками');
+    assert.ok(appSrc.includes('Ключ: до '), 'нет срока в диагностике');
+    assert.ok(appSrc.includes('токен истёк или отозван'), 'нет хинта про 401');
   });
   it('удаление из корзины: подтверждение', () => {
     assert.ok(appSrc.includes('Убрать «'), 'нет вопроса перед удалением');

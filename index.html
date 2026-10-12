@@ -73,7 +73,8 @@
     #modalBox { background: #fff; border-radius: 10px; padding: 18px; width: 100%; max-width: 380px; }
     #modalText { margin-bottom: 10px; white-space: pre-wrap; word-break: break-word;
       max-height: 50vh; overflow-y: auto; font-size: 14px; }
-    #modalInput { width: 100%; font-size: 18px; padding: 10px; margin-bottom: 12px; }
+    #modalInput, #modalRepo, #modalExp { width: 100%; font-size: 18px; padding: 10px; margin-bottom: 12px; }
+    #modalTokenWrap input { width: 100%; font-size: 18px; padding: 10px; margin-bottom: 12px; }
     #modalBox .row { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap;
       border-top: none; padding: 0; }
     #modalBox .row button { flex: 1 1 auto; white-space: nowrap; }
@@ -84,16 +85,12 @@
     #gearMenu button { display: block; width: 100%; text-align: left; background: none;
       border: none; border-bottom: 1px solid #f0f0f0; padding: 12px 14px; }
     #gearMenu button:last-child { border-bottom: none; }
-    .gear-settings { padding: 8px 12px 12px; border-top: 1px solid #eee; }
-    #gearSettings { display: none; }
-    #gearSettings.open { display: block; }
+    .gear-note { padding: 8px 12px 12px; border-top: 1px solid #eee; }
+    .gear-note small { color: #666; }
     #catMenu { display: none; background: rgba(74,144,226,.10);
       border-radius: 8px; margin: 2px 6px; }
     #catMenu.open { display: block; }
     #catMenu button { padding-left: 26px; }
-    .gear-settings input { display: block; width: 100%; box-sizing: border-box;
-      font-size: 14px; padding: 8px 10px; margin: 0 0 8px; }
-    .gear-settings small { color: #666; }
   </style>
 </head>
 <body>
@@ -121,14 +118,9 @@
     <button id="syncNowBtn">⇅ Синхронизировать</button>
     <button id="clearCache">Очистить кэш</button>
     <button id="repoBtn">🔑 Репозиторий и токен</button>
-    <div class="gear-settings" id="gearSettings">
-      <input id="repoInput" placeholder="owner/repo" autocomplete="off" />
-      <span id="tokenWrap"></span>
-      <button id="saveSettings">Сохранить</button>
-      <small>Без токена всё работает локально и офлайн.
-        <a href="./docs/USER_GUIDE.html">Инструкция</a>
-        <span id="appVer"></span></small>
-    </div>
+    <div class="gear-note"><small>Без токена всё работает локально и офлайн.
+      <a href="./docs/USER_GUIDE.html">Инструкция</a>
+      <span id="appVer"></span></small></div>
     <button id="diagBtn">ⓘ Информация для диагностики</button>
   </div>
 
@@ -147,6 +139,9 @@
     <div id="modalBox">
       <div id="modalText"></div>
       <input id="modalInput" autocomplete="off" />
+      <input id="modalRepo" placeholder="owner/repo" autocomplete="off" style="display:none" />
+      <span id="modalTokenWrap" style="display:none"></span>
+      <input id="modalExp" placeholder="Годен до ДД.ММ.ГГГГ" autocomplete="off" style="display:none" />
       <div class="row">
         <button id="modalOk">OK</button>
         <button id="modalClear" style="display:none">Очистить</button>
