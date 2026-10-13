@@ -290,6 +290,14 @@ describe('ios: без системных диалогов', () => {
     const guide = fs.readFileSync(path.join(__dirname, '..', 'docs/USER_GUIDE.html'), 'utf8');
     assert.ok(guide.includes('id="guideClose"'), 'нет кнопки закрыть в инструкции');
   });
+  it('инструкция не отстаёт: фичи упомянуты', () => {
+    const guide = fs.readFileSync(path.join(__dirname, '..', 'docs/USER_GUIDE.html'), 'utf8');
+    for (const kw of ['Порядок', 'Запомнить названия', 'Поделиться списком',
+      'Поделиться приложением', 'Годен до', 'Информация о версиях',
+      'Связь восстановлена', 'Инструкция пользователя']) {
+      assert.ok(guide.includes(kw), 'в инструкции нет: ' + kw);
+    }
+  });
   it('удаление из корзины: подтверждение', () => {
     assert.ok(appSrc.includes('Убрать «'), 'нет вопроса перед удалением');
     assert.ok(appSrc.includes('removeFromList'), 'нет removeFromList');
