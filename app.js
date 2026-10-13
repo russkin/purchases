@@ -3,7 +3,7 @@
 
 (function () {
   var LONGPRESS_MS = 3000;
-  var APP_VERSION = 'v80';
+  var APP_VERSION = 'v81';
   var L = window.QLLogic;
   var state = null;
   var selectedCat = null;
@@ -271,7 +271,10 @@
     } catch (e) {}
   }
   function wireModal() {
-    /* Поля readonly до первого фокуса: Chrome не показывает поверх клавиатуры
+    /* Форма глушит автозаполнение Chrome (полоса карт/ключей) и submit по Enter. */
+    on('modalForm', 'submit', function (e) {
+      if (e && e.preventDefault) e.preventDefault();
+    });    /* Поля readonly до первого фокуса: Chrome не показывает поверх клавиатуры
      * полосу автозаполнения (карты/ключи) для нередактируемых полей. */
     ['modalInput', 'modalRepo', 'modalExp'].forEach(function (id) {
       on(id, 'focus', function () {

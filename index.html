@@ -143,6 +143,7 @@
   <div id="modalBack">
     <div id="modalBox">
       <div id="modalText"></div>
+      <form id="modalForm" autocomplete="off">
       <input id="modalInput" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" readonly />
       <input id="modalRepo" placeholder="owner/repo" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" readonly style="display:none" />
       <span id="modalTokenWrap" style="display:none"></span>
@@ -150,10 +151,11 @@
       <div id="modalNote" style="display:none"><small>Без токена всё работает локально и офлайн.
         <span id="appVer"></span></small></div>
       <div class="row">
-        <button id="modalOk">OK</button>
-        <button id="modalClear" style="display:none">Очистить</button>
-        <button id="modalCancel">Отмена</button>
+        <button id="modalOk" type="button">OK</button>
+        <button id="modalClear" type="button" style="display:none">Очистить</button>
+        <button id="modalCancel" type="button">Отмена</button>
       </div>
+      </form>
     </div>
   </div>
 

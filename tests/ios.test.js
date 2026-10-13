@@ -331,4 +331,11 @@ describe('ios: без системных диалогов', () => {
     assert.ok(appSrc.includes("'popstate'"), 'нет popstate');
     assert.ok(/popstate[\s\S]{0,120}closeCategory\(\)/.test(appSrc), 'Назад не выходит в категории');
   });
+  it('полоса автозаполнения: форма глушит, кнопки не сабмитят', () => {
+    const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+    assert.ok(html.includes('id="modalForm"'), 'нет формы модалки');
+    assert.ok(/<form id="modalForm"[^>]*autocomplete="off"/.test(html), 'форма без autocomplete=off');
+    assert.ok(appSrc.includes("on('modalForm', 'submit'"), 'сабмит не глушится');
+    assert.ok(!/id="modal(Ok|Clear|Cancel)"(?![^>]*type="button")/.test(html), 'кнопка без type=button');
+  });
 });
