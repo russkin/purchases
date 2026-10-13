@@ -318,11 +318,9 @@ describe('ios: без системных диалогов', () => {
     assert.ok(appSrc.includes('Связь восстановлена'), 'нет текста подтверждения');
     assert.ok(appSrc.includes('vibrate'), 'нет вибрации');
   });
-  it('модалка по центру над клавиатурой, без автобара', () => {
+  it('модалка по центру над клавиатурой', () => {
     const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
     assert.ok(html.includes('interactive-widget=resizes-content'), 'нет resizes-content');
-    assert.ok(html.includes('autocorrect="off"'), 'подсказки клавиатуры не гасятся');
-    assert.ok(html.includes('readonly'), 'поля без readonly до фокуса');
     assert.ok(appSrc.includes('visualViewport'), 'нет подстройки под клавиатуру');
     assert.ok(appSrc.includes('paddingBottom'), 'окно не сдвигается над клавиатурой');
   });
@@ -330,12 +328,5 @@ describe('ios: без системных диалогов', () => {
     assert.ok(appSrc.includes('pushState'), 'вход не пишет историю');
     assert.ok(appSrc.includes("'popstate'"), 'нет popstate');
     assert.ok(/popstate[\s\S]{0,120}closeCategory\(\)/.test(appSrc), 'Назад не выходит в категории');
-  });
-  it('полоса автозаполнения: форма глушит, кнопки не сабмитят', () => {
-    const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
-    assert.ok(html.includes('id="modalForm"'), 'нет формы модалки');
-    assert.ok(/<form id="modalForm"[^>]*autocomplete="off"/.test(html), 'форма без autocomplete=off');
-    assert.ok(appSrc.includes("on('modalForm', 'submit'"), 'сабмит не глушится');
-    assert.ok(!/id="modal(Ok|Clear|Cancel)"(?![^>]*type="button")/.test(html), 'кнопка без type=button');
   });
 });

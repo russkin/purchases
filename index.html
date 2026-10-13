@@ -143,19 +143,17 @@
   <div id="modalBack">
     <div id="modalBox">
       <div id="modalText"></div>
-      <form id="modalForm" autocomplete="off">
-      <input id="modalInput" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" readonly />
-      <input id="modalRepo" placeholder="owner/repo" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" readonly style="display:none" />
+      <input id="modalInput" autocomplete="off" />
+      <input id="modalRepo" placeholder="owner/repo" autocomplete="off" style="display:none" />
       <span id="modalTokenWrap" style="display:none"></span>
-      <input id="modalExp" placeholder="Годен до ДД.ММ.ГГГГ" autocomplete="off" inputmode="numeric" maxlength="10" autocorrect="off" spellcheck="false" readonly style="display:none" />
+      <input id="modalExp" placeholder="Годен до ДД.ММ.ГГГГ" autocomplete="off" inputmode="numeric" maxlength="10" style="display:none" />
       <div id="modalNote" style="display:none"><small>Без токена всё работает локально и офлайн.
         <span id="appVer"></span></small></div>
       <div class="row">
-        <button id="modalOk" type="button">OK</button>
-        <button id="modalClear" type="button" style="display:none">Очистить</button>
-        <button id="modalCancel" type="button">Отмена</button>
+        <button id="modalOk">OK</button>
+        <button id="modalClear" style="display:none">Очистить</button>
+        <button id="modalCancel">Отмена</button>
       </div>
-      </form>
     </div>
   </div>
 
