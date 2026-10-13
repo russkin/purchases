@@ -339,5 +339,6 @@ describe('ios: без системных диалогов', () => {
     assert.ok(appSrc.includes('jumpToMatch'), 'нет перехода к найденному');
     assert.ok(appSrc.includes("on('searchPrev'") && appSrc.includes("on('searchNext'"), 'нет переключения');
     assert.ok(appSrc.includes('foundpulse') || html.includes('foundpulse'), 'нет пульса подсветки');
+    assert.ok(!/id="searchBar"[^>]*style=/.test(html), 'инлайн-стиль гасит панель поиска');
   });
 });
