@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, interactive-widget=resizes-content" />
   <meta name="theme-color" content="#ffffff" />
   <meta name="description" content="Быстрый список — семейные списки покупок, работает офлайн" />
   <link rel="manifest" href="./manifest.webmanifest" />
@@ -68,9 +68,11 @@
     footer { position: fixed; bottom: 0; left: 0; right: 0; background: #fff;
       border-top: 1px solid #eee; padding: 6px 14px; font-size: 13px; color: #666; }
     #modalBack { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,.4); z-index: 50; align-items: center; justify-content: center; padding: 20px; }
+      background: rgba(0,0,0,.4); z-index: 50; align-items: flex-start; justify-content: center;
+      padding: 20px; overflow-y: auto; }
     #modalBack.open { display: flex; }
-    #modalBox { background: #fff; border-radius: 10px; padding: 18px; width: 100%; max-width: 380px; }
+    #modalBox { background: #fff; border-radius: 10px; padding: 18px; width: 100%; max-width: 380px;
+      margin: 8vh auto 0; }
     #modalText { margin-bottom: 10px; white-space: pre-wrap; word-break: break-word;
       max-height: 50vh; overflow-y: auto; font-size: 14px; }
     #modalInput, #modalRepo, #modalExp { width: 100%; font-size: 18px; padding: 10px; margin-bottom: 12px; }
@@ -141,10 +143,10 @@
   <div id="modalBack">
     <div id="modalBox">
       <div id="modalText"></div>
-      <input id="modalInput" autocomplete="off" />
-      <input id="modalRepo" placeholder="owner/repo" autocomplete="off" style="display:none" />
+      <input id="modalInput" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" />
+      <input id="modalRepo" placeholder="owner/repo" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" style="display:none" />
       <span id="modalTokenWrap" style="display:none"></span>
-      <input id="modalExp" placeholder="Годен до ДД.ММ.ГГГГ" autocomplete="off" inputmode="numeric" maxlength="10" style="display:none" />
+      <input id="modalExp" placeholder="Годен до ДД.ММ.ГГГГ" autocomplete="off" inputmode="numeric" maxlength="10" autocorrect="off" spellcheck="false" style="display:none" />
       <div id="modalNote" style="display:none"><small>Без токена всё работает локально и офлайн.
         <span id="appVer"></span></small></div>
       <div class="row">

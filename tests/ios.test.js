@@ -318,4 +318,10 @@ describe('ios: без системных диалогов', () => {
     assert.ok(appSrc.includes('Связь восстановлена'), 'нет текста подтверждения');
     assert.ok(appSrc.includes('vibrate'), 'нет вибрации');
   });
+  it('модалка не прячется под клавиатуру', () => {
+    const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+    assert.ok(html.includes('align-items: flex-start'), 'модалка отцентрована');
+    assert.ok(html.includes('interactive-widget=resizes-content'), 'нет resizes-content');
+    assert.ok(html.includes('autocorrect="off"'), 'подсказки клавиатуры не гасятся');
+  });
 });
