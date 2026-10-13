@@ -3,7 +3,7 @@
 
 (function () {
   var LONGPRESS_MS = 3000;
-  var APP_VERSION = 'v82';
+  var APP_VERSION = 'v83';
   var L = window.QLLogic;
   var state = null;
   var selectedCat = null;
