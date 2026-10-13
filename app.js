@@ -788,6 +788,70 @@
     }
   }
 
+  /* --- Поиск («Лупа»): только чтение каталога, синк не трогает. --- */
+  var searchMatches = [];
+  var searchIdx = -1;
+  var searchPulseTimer = null;
+
+  function openSearch() {
+    setGear(false);
+    el('searchBar').classList.add('open');
+    renderSearch();
+    var inp = el('searchInput');
+    if (inp) setTimeout(function () { inp.focus(); }, 50);
+  }
+  function closeSearch() {
+    el('searchBar').classList.remove('open');
+    searchMatches = [];
+    searchIdx = -1;
+  }
+  function renderSearch() {
+    var box = el('searchResults');
+    box.innerHTML = '';
+    var q = el('searchInput').value;
+    searchMatches = L.searchProducts(state.catalog, q);
+    if (searchIdx >= searchMatches.length) searchIdx = -1;
+    var cnt = el('searchCount');
+    if (!q.trim()) cnt.textContent = '';
+    else if (!searchMatches.length) cnt.textContent = 'Ничего не найдено';
+    else cnt.textContent = (searchIdx >= 0 ? (searchIdx + 1) : '—') + '/' + searchMatches.length;
+    searchMatches.forEach(function (m, i) {
+      var b = document.createElement('button');
+      b.textContent = m.name + ' — ' + (m.catName || 'Без категории');
+      if (i === searchIdx) b.className = 'cur';
+      (function (idx) {
+        b.addEventListener('click', function () { jumpToMatch(idx); });
+      })(i);
+      box.appendChild(b);
+    });
+  }
+  function jumpToMatch(i) {
+    if (!searchMatches.length) return;
+    searchIdx = ((i % searchMatches.length) + searchMatches.length) % searchMatches.length;
+    var m = searchMatches[searchIdx];
+    if (state.settings.mode !== 'add') {
+      state.settings.mode = 'add';
+      save();
+    }
+    sortMode = false;
+    selectedCat = m.catIndex;
+    render();
+    renderSearch();
+    var tiles = el('grid').children;
+    var tile = tiles[m.prodIndex];
+    if (tile) {
+      try { tile.scrollIntoView({ block: 'center' }); } catch (e) {
+        try { tile.scrollIntoView(); } catch (e2) {}
+      }
+      tile.classList.add('found');
+      if (searchPulseTimer) clearTimeout(searchPulseTimer);
+      searchPulseTimer = setTimeout(function () {
+        searchPulseTimer = null;
+        tile.classList.remove('found');
+      }, 2000);
+    }
+  }
+
   /* --- Режим списка --- */
 
   function renderList() {
@@ -1001,6 +1065,21 @@
       sortMode = !sortMode;
       setGear(false);
       render();
+    });
+    on('searchBtn', 'click', function () {
+      if (el('searchBar').classList.contains('open')) closeSearch();
+      else openSearch();
+    });
+    on('searchClose', 'click', closeSearch);
+    on('searchInput', 'input', function () {
+      searchIdx = -1;
+      renderSearch();
+    });
+    on('searchPrev', 'click', function () {
+      jumpToMatch(searchIdx < 0 ? searchMatches.length - 1 : searchIdx - 1);
+    });
+    on('searchNext', 'click', function () {
+      jumpToMatch(searchIdx < 0 ? 0 : searchIdx + 1);
     });
     /* Выход из режима порядка тапом по названию/версии в шапке. */
     function exitSort() {

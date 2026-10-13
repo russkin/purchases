@@ -414,3 +414,32 @@ describe('ручной порядок: moveCategory/moveProduct', () => {
     assert.equal(merged.categories[1].products[0].name, 'Молоко');
   });
 });
+describe('поиск товаров (Лупа)', () => {
+  function shop() {
+    const c = L.blankCatalog();
+    L.setCategoryName(c, 0, 'Молочка');
+    L.setProductName(c, 0, 0, 'Молоко');
+    L.setProductName(c, 0, 1, 'Кефир');
+    L.setCategoryName(c, 1, 'Хлеб');
+    L.setProductName(c, 1, 0, 'Батон');
+    return c;
+  }
+  it('подстрока без регистра и пробелов, порядок каталога', () => {
+    const r = L.searchProducts(shop(), '  МОЛ ');
+    assert.equal(r.length, 1);
+    assert.equal(r[0].name, 'Молоко');
+    assert.equal(r[0].catIndex, 0);
+    assert.equal(r[0].prodIndex, 0);
+    assert.equal(r[0].catName, 'Молочка');
+  });
+  it('несколько совпадений и пустые имена мимо', () => {
+    const r = L.searchProducts(shop(), 'о');
+    assert.ok(r.length >= 2);
+    assert.ok(r.every(function (m) { return m.name; }));
+  });
+  it('пусто и ничего — пустой список', () => {
+    assert.deepEqual(L.searchProducts(shop(), ''), []);
+    assert.deepEqual(L.searchProducts(shop(), '   '), []);
+    assert.deepEqual(L.searchProducts(shop(), 'сгущёнка'), []);
+  });
+});

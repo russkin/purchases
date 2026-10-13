@@ -338,6 +338,22 @@ function normTokenExp(s) {
   return p(d) + '.' + p(m) + '.' + y;
 }
 
+/* Поиск товаров по подстроке (фича «Лупа»): без учёта регистра и краевых
+ * пробелов, только именованные. Порядок — как в каталоге. */
+function searchProducts(catalog, q) {
+  var want = normName(q).toLowerCase();
+  if (!want) return [];
+  var out = [];
+  catalog.categories.forEach(function (c, ci) {
+    c.products.forEach(function (p, pi) {
+      if (p.name && normName(p.name).toLowerCase().indexOf(want) !== -1) {
+        out.push({ catIndex: ci, prodIndex: pi, name: p.name, catName: c.name });
+      }
+    });
+  });
+  return out;
+}
+
 /* Полных дней до даты exp (по UTC-полуночам — часовой пояс не влияет).
  * Пустое/битое — 9999 (предупреждений нет). Прошлое — 0 и меньше. */
 function tokenDaysLeft(exp, nowMs) {
@@ -518,6 +534,7 @@ var api = {
   tokenDaysLeft: tokenDaysLeft,
   tokenWarnLevel: tokenWarnLevel,
   maskDateExp: maskDateExp,
+  searchProducts: searchProducts,
   isCatalogEmpty: isCatalogEmpty,
   mergeDecision: mergeDecision,
   normalizeProduct: normalizeProduct,

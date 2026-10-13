@@ -93,6 +93,21 @@
       color: inherit; text-decoration: none; border-bottom: 1px solid #f0f0f0; }
     #modalNote { margin: -4px 0 12px; }
     #modalNote small { color: #666; }
+    #searchBar { display: none; background: #fff; border-bottom: 1px solid #eee;
+      padding: 8px 14px 10px; position: sticky; top: 0; z-index: 4; }
+    #searchBar.open { display: block; }
+    #searchBar input { width: 100%; font-size: 18px; padding: 10px; margin-bottom: 8px; }
+    #searchBar .row { display: flex; gap: 8px; align-items: center; }
+    #searchCount { flex: 1; text-align: center; color: #666; font-size: 14px; }
+    #searchResults { max-height: 30vh; overflow-y: auto; margin-top: 8px; }
+    #searchResults button { display: block; width: 100%; text-align: left; background: none;
+      border: none; border-top: 1px solid #f0f0f0; padding: 10px 4px; font-size: 16px; }
+    #searchResults button.cur { background: #e8f0fe; }
+    @keyframes foundpulse {
+      0%, 100% { box-shadow: 0 0 0 2px #4a90e2 inset; }
+      50% { box-shadow: 0 0 0 5px #4a90e2 inset; }
+    }
+    .btn.found { animation: foundpulse 1s 2; border-color: #4a90e2; }
     #catMenu { display: none; background: rgba(74,144,226,.10);
       border-radius: 8px; margin: 2px 6px; }
     #catMenu.open { display: block; }
@@ -127,6 +142,18 @@
     <button id="diagBtn">ⓘ Информация для диагностики</button>
     <a id="guideBtn" href="./docs/USER_GUIDE.html" target="_blank" rel="noopener">📖 Инструкция пользователя</a>
     <a id="versionsBtn" href="./docs/VERSIONS.html" target="_blank" rel="noopener">📋 Информация о версиях</a>
+    <button id="searchBtn">🔍 Поиск</button>
+  </div>
+
+  <div id="searchBar" style="display:none">
+    <input id="searchInput" placeholder="Найти товар…" autocomplete="off" />
+    <div class="row">
+      <button id="searchPrev" aria-label="Предыдущий">‹</button>
+      <span id="searchCount"></span>
+      <button id="searchNext" aria-label="Следующий">›</button>
+      <button id="searchClose" aria-label="Закрыть">✕</button>
+    </div>
+    <div id="searchResults"></div>
   </div>
 
   <main id="screen-add">

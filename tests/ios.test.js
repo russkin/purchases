@@ -178,7 +178,7 @@ describe('ios: без системных диалогов', () => {
   it('порядок пунктов меню: как задано пользователем', () => {
     const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
     const order = ['shareBtn', 'catMenuBtn', 'shareAppBtn', 'installBtn',
-      'syncNowBtn', 'clearCache', 'repoBtn', 'diagBtn'];
+      'syncNowBtn', 'clearCache', 'repoBtn', 'diagBtn', 'searchBtn'];
     let prev = -1;
     for (const id of order) {
       const i = html.indexOf('id="' + id + '"');
@@ -328,5 +328,16 @@ describe('ios: без системных диалогов', () => {
     assert.ok(appSrc.includes('pushState'), 'вход не пишет историю');
     assert.ok(appSrc.includes("'popstate'"), 'нет popstate');
     assert.ok(/popstate[\s\S]{0,120}closeCategory\(\)/.test(appSrc), 'Назад не выходит в категории');
+  });
+  it('лупа: кнопка, панель, переход и переключение', () => {
+    const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+    assert.ok(html.includes('id="searchBtn"'), 'нет searchBtn в меню');
+    assert.ok(html.includes('id="searchBar"'), 'нет searchBar');
+    assert.ok(html.includes('id="searchInput"'), 'нет searchInput');
+    assert.ok(html.includes('id="searchResults"'), 'нет searchResults');
+    assert.ok(appSrc.includes('searchProducts'), 'поиск не вызывается');
+    assert.ok(appSrc.includes('jumpToMatch'), 'нет перехода к найденному');
+    assert.ok(appSrc.includes("on('searchPrev'") && appSrc.includes("on('searchNext'"), 'нет переключения');
+    assert.ok(appSrc.includes('foundpulse') || html.includes('foundpulse'), 'нет пульса подсветки');
   });
 });
