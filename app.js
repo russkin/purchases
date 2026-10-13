@@ -3,7 +3,7 @@
 
 (function () {
   var LONGPRESS_MS = 3000;
-  var APP_VERSION = 'v79';
+  var APP_VERSION = 'v80';
   var L = window.QLLogic;
   var state = null;
   var selectedCat = null;
@@ -17,6 +17,11 @@
     selectedCat = ci;
     render();
     window.scrollTo(0, 0);
+    /* Запись истории для системной кнопки Назад: возврат снимает её
+     * и выходит в категории (см. popstate в wire). */
+    try {
+      window.history.pushState({ view: 'cat', ci: ci }, '');
+    } catch (e) {}
   }
   function closeCategory() {
     selectedCat = null;
@@ -88,6 +93,7 @@
   }
   function closeModal(value) {
     el('modalBack').classList.remove('open');
+    try { el('modalBack').style.paddingBottom = ''; } catch (e) {}
     el('modalCancel').style.display = '';
     el('modalClear').style.display = 'none';
     el('modalClear').textContent = 'Очистить';
@@ -112,6 +118,7 @@
     el('modalClear').style.display = showClear ? '' : 'none';
     el('modalBack').classList.add('open');
     setTimeout(function () { if (showInput !== false) input.focus(); }, 50);
+    fitModalAboveKeyboard();
     return new Promise(function (resolve) { modalResolve = resolve; });
   }
   function askConfirm(title) {
@@ -130,6 +137,7 @@
     }
     el('modalCancel').style.display = 'none';
     el('modalBack').classList.add('open');
+    fitModalAboveKeyboard();
     return new Promise(function (resolve) { modalResolve = resolve; });
   }
 
@@ -152,6 +160,7 @@
     el('modalCancel').style.display = '';
     el('modalBack').classList.add('open');
     modalMode = 'settings';
+    fitModalAboveKeyboard();
     return new Promise(function (resolve) { modalResolve = resolve; });
   }
   function openSettings() {
@@ -249,7 +258,27 @@
     }
     return lines.join('\n');
   }
+  /* Центрирование окна в видимой зоне над клавиатурой: нижний отступ
+   * равен высоте клавиатуры (разнице вьюпортов). Без клавиатуры — 0,
+   * без Visual Viewport API — как раньше, по центру экрана. */
+  function fitModalAboveKeyboard() {
+    try {
+      var vv = window.visualViewport;
+      var back = el('modalBack');
+      if (!vv || !back) return;
+      var kb = window.innerHeight - vv.height;
+      back.style.paddingBottom = (kb > 100 ? Math.round(kb) : 0) + 'px';
+    } catch (e) {}
+  }
   function wireModal() {
+    /* Поля readonly до первого фокуса: Chrome не показывает поверх клавиатуры
+     * полосу автозаполнения (карты/ключи) для нередактируемых полей. */
+    ['modalInput', 'modalRepo', 'modalExp'].forEach(function (id) {
+      on(id, 'focus', function () {
+        var f = el(id);
+        if (f) f.removeAttribute('readonly');
+      });
+    });
     on('modalOk', 'click', function () {
       if (modalMode === 'settings') {
         /* Поля токена уже нет в DOM (меню закрылось под окном) —
@@ -1036,6 +1065,16 @@
     });
     window.addEventListener('focus', window.QLApp.onTabActive);
     window.addEventListener('pageshow', window.QLApp.onTabActive);
+    /* Системная кнопка Назад: из товаров — в категории, дальше — как обычно. */
+    window.addEventListener('popstate', function () {
+      if (selectedCat !== null) closeCategory();
+    });
+    /* Высота клавиатуры: подстраиваем отступ модалки под видимую зону. */
+    try {
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', fitModalAboveKeyboard);
+      }
+    } catch (e) {}
   }
 
   function init() {
